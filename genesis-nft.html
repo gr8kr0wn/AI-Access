@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Genesis Pass NFT — AIAccess</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .page-hero {
+      min-height: 38vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 2rem;
+    }
+
+    /* NFT Supply Bar */
+    .supply-bar-section {
+      padding: 0 clamp(1rem,5vw,4rem) 3rem;
+    }
+
+    .supply-bar-card {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .supply-item {
+      text-align: center;
+    }
+
+    .supply-num {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .supply-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.3rem;
+      font-family: var(--font-heading);
+    }
+
+    /* NFT Cards */
+    .nft-section {
+      padding: 2rem clamp(1rem,5vw,4rem) 6rem;
+    }
+
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 3rem auto 0;
+    }
+
+    .nft-card {
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .nft-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1px;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .nft-card.common { background: rgba(10,15,30,0.9); border: 1px solid rgba(120,120,140,0.3); }
+    .nft-card.rare { background: rgba(0,30,60,0.9); border: 1px solid rgba(0,194,255,0.4); }
+    .nft-card.epic { background: rgba(30,0,60,0.9); border: 1px solid rgba(123,47,255,0.5); }
+    .nft-card.legendary { background: rgba(40,10,0,0.9); border: 1px solid rgba(255,160,0,0.6); }
+
+    .nft-card:hover {
+      transform: translateY(-8px) scale(1.02);
+    }
+
+    .nft-card.common:hover { box-shadow: 0 20px 60px rgba(120,120,140,0.2); }
+    .nft-card.rare:hover { box-shadow: 0 20px 60px rgba(0,194,255,0.25); }
+    .nft-card.epic:hover { box-shadow: 0 20px 60px rgba(123,47,255,0.3); }
+    .nft-card.legendary:hover { box-shadow: 0 20px 60px rgba(255,160,0,0.3); }
+
+    .nft-visual {
+      height: 200px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .nft-visual-bg {
+      position: absolute;
+      inset: 0;
+      opacity: 0.15;
+    }
+
+    .nft-card.common .nft-visual-bg { background: radial-gradient(circle, #9ca3af, transparent); }
+    .nft-card.rare .nft-visual-bg { background: radial-gradient(circle, #00C2FF, transparent); }
+    .nft-card.epic .nft-visual-bg { background: radial-gradient(circle, #7B2FFF, transparent); }
+    .nft-card.legendary .nft-visual-bg { background: radial-gradient(circle, #FFA000, transparent); }
+
+    .nft-icon {
+      font-size: 4rem;
+      position: relative;
+      z-index: 1;
+      animation: float-slow 5s ease-in-out infinite;
+    }
+
+    .nft-card.common .nft-icon { filter: drop-shadow(0 0 12px rgba(156,163,175,0.5)); }
+    .nft-card.rare .nft-icon { filter: drop-shadow(0 0 12px rgba(0,194,255,0.7)); }
+    .nft-card.epic .nft-icon { filter: drop-shadow(0 0 16px rgba(123,47,255,0.8)); }
+    .nft-card.legendary .nft-icon { filter: drop-shadow(0 0 20px rgba(255,160,0,0.9)); animation: float-slow 4s ease-in-out infinite, pulse-golden 2s ease-in-out infinite; }
+
+    @keyframes pulse-golden {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(255,160,0,0.9)); }
+      50% { filter: drop-shadow(0 0 40px rgba(255,200,0,1)); }
+    }
+
+    .nft-rarity-badge {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .nft-card.common .nft-rarity-badge { background: rgba(156,163,175,0.15); color: #9ca3af; border: 1px solid rgba(156,163,175,0.3); }
+    .nft-card.rare .nft-rarity-badge { background: rgba(0,194,255,0.15); color: var(--cyan); border: 1px solid rgba(0,194,255,0.4); }
+    .nft-card.epic .nft-rarity-badge { background: rgba(123,47,255,0.2); color: var(--purple); border: 1px solid rgba(123,47,255,0.5); }
+    .nft-card.legendary .nft-rarity-badge { background: rgba(255,160,0,0.15); color: #FFA000; border: 1px solid rgba(255,160,0,0.5); }
+
+    .nft-supply-badge {
+      position: absolute;
+      top: 1rem; left: 1rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 100px;
+      font-family: var(--font-heading);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+    }
+
+    .nft-body {
+      padding: 1.5rem;
+    }
+
+    .nft-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+    }
+
+    .nft-card.common .nft-name { color: #9ca3af; }
+    .nft-card.rare .nft-name { color: var(--cyan); }
+    .nft-card.epic .nft-name { color: var(--purple); text-shadow: 0 0 20px rgba(123,47,255,0.5); }
+    .nft-card.legendary .nft-name { color: #FFA000; text-shadow: 0 0 20px rgba(255,160,0,0.6); }
+
+    .nft-pricing {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .price-item { }
+    .price-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem; font-family: var(--font-heading); }
+    .price-val { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; }
+
+    .nft-perks {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .nft-perk {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .nft-perk i { font-size: 0.7rem; }
+
+    .nft-card.common .nft-perk i { color: #9ca3af; }
+    .nft-card.rare .nft-perk i { color: var(--cyan); }
+    .nft-card.epic .nft-perk i { color: var(--purple); }
+    .nft-card.legendary .nft-perk i { color: #FFA000; }
+
+    .nft-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: var(--transition);
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      box-sizing: border-box;
+    }
+
+    .nft-card.common .nft-btn { background: rgba(156,163,175,0.1); color: #9ca3af; border: 1px solid rgba(156,163,175,0.3); }
+    .nft-card.rare .nft-btn { background: rgba(0,194,255,0.1); color: var(--cyan); border: 1px solid rgba(0,194,255,0.4); }
+    .nft-card.epic .nft-btn { background: rgba(123,47,255,0.15); color: var(--purple); border: 1px solid rgba(123,47,255,0.5); }
+    .nft-card.legendary .nft-btn { background: rgba(255,160,0,0.12); color: #FFA000; border: 1px solid rgba(255,160,0,0.5); }
+
+    .nft-btn:hover { filter: brightness(1.3); transform: none; }
+
+    /* Comparison table */
+    .compare-section {
+      padding: 3rem clamp(1rem,5vw,4rem) 6rem;
+      background: linear-gradient(135deg, rgba(123,47,255,0.04), rgba(0,194,255,0.04));
+      border-top: 1px solid var(--border);
+    }
+
+    .compare-table {
+      max-width: 1000px;
+      margin: 3rem auto 0;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      padding: 1rem 1.25rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    .feature-col { font-family: var(--font-heading); font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+    .check { color: #00ff9d; font-size: 1rem; }
+    .cross { color: rgba(255,255,255,0.2); font-size: 1rem; }
+
+    .col-common { color: #9ca3af; }
+    .col-rare { color: var(--cyan); }
+    .col-epic { color: var(--purple); }
+    .col-legendary { color: #FFA000; }
+
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    @media (max-width: 900px) {
+      .nft-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .nft-grid { grid-template-columns: 1fr; }
+      .supply-bar-card { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="tokenomics.html">Tokenomics</a></li>
+      <li><a href="genesis-nft.html" class="active">Genesis NFT</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tokenomics.html">Tokenomics</a>
+    <a href="genesis-nft.html" class="active">Genesis NFT</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="team.html">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+  </div>
+
+  <main>
+    <div class="page-hero">
+      <div>
+        <div class="section-label reveal" style="justify-content:center;">500 Unique NFTs</div>
+        <h1 class="section-title reveal delay-1">Genesis <span class="gradient-text">Pass NFT</span></h1>
+        <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">Your key to the AIAccess ecosystem. 4 rarities, limited supply, and lifetime benefits that grow with the platform.</p>
+      </div>
+    </div>
+
+    <!-- SUPPLY BAR -->
+    <div class="supply-bar-section">
+      <div class="glass-card supply-bar-card reveal">
+        <div class="supply-item">
+          <div class="supply-num" style="color:#9ca3af;">300</div>
+          <div class="supply-label">Common</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div class="supply-item">
+          <div class="supply-num" style="color:var(--cyan);">150</div>
+          <div class="supply-label">Rare</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div class="supply-item">
+          <div class="supply-num" style="color:var(--purple);">40</div>
+          <div class="supply-label">Epic</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div class="supply-item">
+          <div class="supply-num" style="color:#FFA000;">10</div>
+          <div class="supply-label">Legendary</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div class="supply-item">
+          <div class="supply-num gradient-text">500</div>
+          <div class="supply-label">Total Supply</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NFT CARDS -->
+    <section class="nft-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Choose Your Tier</div>
+          <h2 class="section-title">Select Your <span class="gradient-text">Rarity</span></h2>
+        </div>
+
+        <div class="nft-grid">
+          <!-- COMMON -->
+          <div class="nft-card common tilt-card reveal delay-1">
+            <div class="nft-visual">
+              <div class="nft-visual-bg"></div>
+              <div class="nft-rarity-badge">Common</div>
+              <div class="nft-supply-badge">300 Units</div>
+              <div class="nft-icon">🗝️</div>
+            </div>
+            <div class="nft-body">
+              <div class="nft-name">Common Pass</div>
+              <div class="nft-pricing">
+                <div class="price-item">
+                  <div class="price-label">WL Price</div>
+                  <div class="price-val" style="color:#9ca3af;">0.2 SOL</div>
+                </div>
+                <div class="price-item">
+                  <div class="price-label">Public Price</div>
+                  <div class="price-val" style="color:#9ca3af;">0.4 SOL</div>
+                </div>
+              </div>
+              <div class="nft-perks">
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> 1x Presale Allocation</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> $ACCESS Staking</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Governance Voting</div>
+              </div>
+              <a href="https://form.typeform.com/to/y2b6b9hP" target="_blank" rel="noopener noreferrer" class="nft-btn">Get Whitelist</a>
+            </div>
+          </div>
+
+          <!-- RARE -->
+          <div class="nft-card rare tilt-card reveal delay-2">
+            <div class="nft-visual">
+              <div class="nft-visual-bg"></div>
+              <div class="nft-rarity-badge">Rare</div>
+              <div class="nft-supply-badge">150 Units</div>
+              <div class="nft-icon">💎</div>
+            </div>
+            <div class="nft-body">
+              <div class="nft-name">Rare Pass</div>
+              <div class="nft-pricing">
+                <div class="price-item">
+                  <div class="price-label">WL Price</div>
+                  <div class="price-val" style="color:var(--cyan);">0.4 SOL</div>
+                </div>
+                <div class="price-item">
+                  <div class="price-label">Public Price</div>
+                  <div class="price-val" style="color:var(--cyan);">0.8 SOL</div>
+                </div>
+              </div>
+              <div class="nft-perks">
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> 2x Presale Allocation</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Early Project Access</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> $ACCESS Staking</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Governance Voting</div>
+              </div>
+              <a href="https://form.typeform.com/to/y2b6b9hP" target="_blank" rel="noopener noreferrer" class="nft-btn">Get Whitelist</a>
+            </div>
+          </div>
+
+          <!-- EPIC -->
+          <div class="nft-card epic tilt-card reveal delay-3">
+            <div class="nft-visual">
+              <div class="nft-visual-bg"></div>
+              <div class="nft-rarity-badge">Epic</div>
+              <div class="nft-supply-badge">40 Units</div>
+              <div class="nft-icon">⚡</div>
+            </div>
+            <div class="nft-body">
+              <div class="nft-name">Epic Pass</div>
+              <div class="nft-pricing">
+                <div class="price-item">
+                  <div class="price-label">WL Price</div>
+                  <div class="price-val" style="color:var(--purple);">1 SOL</div>
+                </div>
+                <div class="price-item">
+                  <div class="price-label">Public Price</div>
+                  <div class="price-val" style="color:var(--purple);">2 SOL</div>
+                </div>
+              </div>
+              <div class="nft-perks">
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> 5x Presale Allocation</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Private Alpha Chat</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Early Project Access</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Enhanced Staking APY</div>
+              </div>
+              <a href="https://form.typeform.com/to/y2b6b9hP" target="_blank" rel="noopener noreferrer" class="nft-btn">Get Whitelist</a>
+            </div>
+          </div>
+
+          <!-- LEGENDARY -->
+          <div class="nft-card legendary tilt-card reveal delay-4">
+            <div class="nft-visual">
+              <div class="nft-visual-bg"></div>
+              <div class="nft-rarity-badge">Legendary</div>
+              <div class="nft-supply-badge">10 Units</div>
+              <div class="nft-icon">👑</div>
+            </div>
+            <div class="nft-body">
+              <div class="nft-name">Legendary Pass</div>
+              <div class="nft-pricing">
+                <div class="price-item">
+                  <div class="price-label">WL Price</div>
+                  <div class="price-val" style="color:#FFA000;">2 SOL</div>
+                </div>
+                <div class="price-item">
+                  <div class="price-label">Public Price</div>
+                  <div class="price-val" style="color:#FFA000;">4 SOL</div>
+                </div>
+              </div>
+              <div class="nft-perks">
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> 10x Presale Allocation</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Revenue Share</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Private Alpha Chat</div>
+                <div class="nft-perk"><i class="fa-solid fa-check"></i> Max Staking APY</div>
+              </div>
+              <a href="https://form.typeform.com/to/y2b6b9hP" target="_blank" rel="noopener noreferrer" class="nft-btn">Get Whitelist</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARISON TABLE -->
+    <section class="compare-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Full Comparison</div>
+          <h2 class="section-title">Tier <span class="gradient-text">Comparison</span></h2>
+        </div>
+
+        <div class="compare-table reveal delay-1">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th class="col-common">Common</th>
+                <th class="col-rare">Rare</th>
+                <th class="col-epic">Epic</th>
+                <th class="col-legendary">Legendary</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="feature-col">Supply</td>
+                <td class="col-common">300</td>
+                <td class="col-rare">150</td>
+                <td class="col-epic">40</td>
+                <td class="col-legendary">10</td>
+              </tr>
+              <tr>
+                <td class="feature-col">WL Price</td>
+                <td>0.2 SOL</td>
+                <td>0.4 SOL</td>
+                <td>1 SOL</td>
+                <td>2 SOL</td>
+              </tr>
+              <tr>
+                <td class="feature-col">Public Price</td>
+                <td>0.4 SOL</td>
+                <td>0.8 SOL</td>
+                <td>2 SOL</td>
+                <td>4 SOL</td>
+              </tr>
+              <tr>
+                <td class="feature-col">Allocation Bonus</td>
+                <td>1x</td>
+                <td>2x</td>
+                <td>5x</td>
+                <td>10x</td>
+              </tr>
+              <tr>
+                <td class="feature-col">$ACCESS Staking</td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+              </tr>
+              <tr>
+                <td class="feature-col">Governance Voting</td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+              </tr>
+              <tr>
+                <td class="feature-col">Early Project Access</td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+              </tr>
+              <tr>
+                <td class="feature-col">Private Alpha Chat</td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+              </tr>
+              <tr>
+                <td class="feature-col">Revenue Share</td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-xmark cross"></i></td>
+                <td><i class="fa-solid fa-check check"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="how-it-works.html">How It Works</a></li><li><a href="tokenomics.html">Tokenomics</a></li><li><a href="genesis-nft.html">Genesis NFT</a></li></ul></div>
+      <div class="footer-col"><h4>More</h4><ul><li><a href="roadmap.html">Roadmap</a></li><li><a href="team.html">Team</a></li><li><a href="whitepaper.html">Whitepaper</a></li></ul></div>
+      <div class="footer-col"><h4>Community</h4><ul><li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li><li><a href="https://t.me/aikin_access" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

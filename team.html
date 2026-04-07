@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team — AIAccess</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .page-hero {
+      min-height: 38vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 2rem;
+      position: relative;
+    }
+
+    /* Team Cards */
+    .team-section {
+      padding: 2rem clamp(1rem,5vw,4rem) 6rem;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+      max-width: 900px;
+      margin: 4rem auto 0;
+    }
+
+    .team-card {
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .team-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 80px rgba(123,47,255,0.2);
+    }
+
+    .team-card-top {
+      position: relative;
+      padding: 2.5rem 2rem 0;
+      background: linear-gradient(135deg, rgba(123,47,255,0.1), rgba(0,194,255,0.05));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .team-avatar-wrapper {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      margin-bottom: 1.25rem;
+    }
+
+    .team-avatar {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      position: relative;
+      z-index: 2;
+      border: 3px solid rgba(123,47,255,0.4);
+    }
+
+    .team-avatar-glow {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--purple), var(--cyan), var(--pink), var(--purple));
+      animation: spin-slow 6s linear infinite;
+      z-index: 1;
+      opacity: 0.6;
+      filter: blur(3px);
+    }
+
+    .team-avatar-placeholder {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+      z-index: 2;
+      background: linear-gradient(135deg, rgba(123,47,255,0.3), rgba(0,194,255,0.2));
+      border: 3px solid rgba(123,47,255,0.5);
+    }
+
+    .team-role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 1rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .role-founder { background: rgba(123,47,255,0.15); color: var(--purple); border: 1px solid rgba(123,47,255,0.4); }
+    .role-dev { background: rgba(0,194,255,0.12); color: var(--cyan); border: 1px solid rgba(0,194,255,0.4); }
+
+    .team-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.03em;
+    }
+
+    .team-title {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .team-card-wave {
+      width: 100%;
+      height: 30px;
+      background: var(--bg-secondary);
+      clip-path: ellipse(55% 100% at 50% 100%);
+      margin-top: 0.5rem;
+    }
+
+    .team-card-body {
+      padding: 1.5rem 2rem 2rem;
+      background: var(--bg-secondary);
+    }
+
+    .team-bio {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.75;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .team-socials {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .team-social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .team-social-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .team-social-btn.twitter:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+      box-shadow: var(--glow-purple);
+    }
+
+    .team-social-btn.telegram:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Values section */
+    .values-section {
+      padding: 5rem clamp(1rem,5vw,4rem);
+      border-top: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(123,47,255,0.04), rgba(0,194,255,0.03));
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 3rem auto 0;
+    }
+
+    .value-card {
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .value-emoji {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .value-card h4 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .value-card p { font-size: 0.83rem; color: var(--muted); line-height: 1.65; }
+
+    /* Join section */
+    .join-section {
+      padding: 5rem clamp(1rem,5vw,4rem);
+      text-align: center;
+    }
+
+    .join-card {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 3.5rem;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(123,47,255,0.1), rgba(0,194,255,0.07));
+      border: 1px solid rgba(123,47,255,0.3);
+    }
+
+    .join-card h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem,3vw,2rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+
+    .join-card p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .join-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    @media (max-width: 700px) {
+      .team-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .values-grid { grid-template-columns: 1fr; }
+      .join-card { padding: 2rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="tokenomics.html">Tokenomics</a></li>
+      <li><a href="genesis-nft.html">Genesis NFT</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+      <li><a href="team.html" class="active">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tokenomics.html">Tokenomics</a>
+    <a href="genesis-nft.html">Genesis NFT</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="team.html" class="active">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+  </div>
+
+  <main>
+    <div class="page-hero">
+      <div>
+        <div class="section-label reveal" style="justify-content:center;">The Builders</div>
+        <h1 class="section-title reveal delay-1">Meet the <span class="gradient-text">Team</span></h1>
+        <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">Public, accountable, and obsessed with building the best AI launchpad in Web3.</p>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <section class="team-section">
+      <div class="team-grid">
+
+        <!-- Ai Kin -->
+        <div class="glass-card team-card tilt-card reveal delay-1">
+          <div class="team-card-top">
+            <div class="team-avatar-wrapper">
+              <div class="team-avatar-glow"></div>
+              <img src="photo_5377722049201116711_x.jpg" alt="Ai Kin" class="team-avatar" />
+            </div>
+            <div class="team-role-badge role-founder"><i class="fa-solid fa-crown"></i> Founder</div>
+            <div class="team-name">Ai Kin</div>
+            <div class="team-title">Founder &amp; Visionary</div>
+          </div>
+          <div class="team-card-wave"></div>
+          <div class="team-card-body">
+            <p class="team-bio">
+              The mind behind AIAccess. Ai Kin spotted the gap in the market — no trusted gateway existed for early AI agent investments on Solana. With a vision for a curated, community-driven launchpad, AIAccess was born. Passionate about AI, DeFi, and putting power back in the hands of early believers.
+            </p>
+            <div class="team-socials">
+              <a href="https://x.com/aikin_access" target="_blank" class="team-social-btn twitter">
+                <i class="fa-brands fa-x-twitter"></i> @aikin_access
+              </a>
+              <a href="https://t.me/aikin_access" target="_blank" class="team-social-btn telegram">
+                <i class="fa-brands fa-telegram"></i> @aikin_access
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mr Gr8 -->
+        <div class="glass-card team-card tilt-card reveal delay-2">
+          <div class="team-card-top">
+            <div class="team-avatar-wrapper">
+              <div class="team-avatar-glow" style="background:conic-gradient(from 0deg,var(--cyan),var(--purple),var(--pink),var(--cyan));"></div>
+              <img src="mr gr8 profile image.jpg" alt="Mr Gr8" class="team-avatar" />
+            </div>
+            <div class="team-role-badge role-dev"><i class="fa-solid fa-code"></i> Lead Developer</div>
+            <div class="team-name">Mr Gr8</div>
+            <div class="team-title">Lead Web3 Developer</div>
+          </div>
+          <div class="team-card-wave"></div>
+          <div class="team-card-body">
+            <p class="team-bio">
+              The technical powerhouse of AIAccess. Mr Gr8 brings deep expertise in Web3 development, smart contract architecture, and full-stack engineering. From the launchpad infrastructure to the staking mechanisms, every line of code is crafted with precision. Building the rails of the AI economy on Solana.
+            </p>
+            <div class="team-socials">
+              <a href="https://x.com/Mrgr8ofWeb3" target="_blank" class="team-social-btn twitter">
+                <i class="fa-brands fa-x-twitter"></i> @Mrgr8ofWeb3
+              </a>
+              <a href="https://t.me/Mr_gr8_K" target="_blank" class="team-social-btn telegram">
+                <i class="fa-brands fa-telegram"></i> @Mr_gr8_K
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VALUES -->
+    <section class="values-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Our Principles</div>
+          <h2 class="section-title">What We <span class="gradient-text">Stand For</span></h2>
+        </div>
+
+        <div class="values-grid">
+          <div class="glass-card value-card tilt-card reveal delay-1">
+            <span class="value-emoji">🔍</span>
+            <h4>Radical Transparency</h4>
+            <p>No anonymous founders. No hidden allocations. Everything about AIAccess — from team to tokenomics — is fully public and verifiable.</p>
+          </div>
+          <div class="glass-card value-card tilt-card reveal delay-2">
+            <span class="value-emoji">🏆</span>
+            <h4>Community First</h4>
+            <p>NFT holders vote on what gets listed. The community controls the direction. This platform exists to serve its holders, not enrich founders.</p>
+          </div>
+          <div class="glass-card value-card tilt-card reveal delay-3">
+            <span class="value-emoji">🛡️</span>
+            <h4>Security Obsessed</h4>
+            <p>Every smart contract is audited by tier-1 firms. Every listed project passes our vetting. Protecting our community is paramount.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOIN SECTION -->
+    <section class="join-section">
+      <div class="join-card reveal">
+        <h2>Join the <span class="gradient-text">Community</span></h2>
+        <p>Get early access to projects, governance power, and staking rewards. The AIAccess community is where the next wave of AI investing begins.</p>
+        <div class="join-btns">
+          <a href="https://x.com/aikin_access" target="_blank" class="btn-primary">
+            <i class="fa-brands fa-x-twitter"></i> Follow on X
+          </a>
+          <a href="https://t.me/aikin_access" target="_blank" class="btn-outline">
+            <i class="fa-brands fa-telegram"></i> Join Telegram
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="how-it-works.html">How It Works</a></li><li><a href="tokenomics.html">Tokenomics</a></li><li><a href="genesis-nft.html">Genesis NFT</a></li></ul></div>
+      <div class="footer-col"><h4>More</h4><ul><li><a href="roadmap.html">Roadmap</a></li><li><a href="team.html">Team</a></li><li><a href="whitepaper.html">Whitepaper</a></li></ul></div>
+      <div class="footer-col"><h4>Community</h4><ul><li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li><li><a href="https://t.me/aikin_access" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

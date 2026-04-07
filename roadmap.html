@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadmap — AIAccess</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .page-hero {
+      min-height: 38vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 2rem;
+    }
+
+    /* Timeline */
+    .timeline-section {
+      padding: 2rem clamp(1rem,5vw,4rem) 6rem;
+    }
+
+    .timeline {
+      max-width: 1000px;
+      margin: 4rem auto 0;
+      position: relative;
+    }
+
+    /* Center line */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--purple), var(--cyan), var(--purple), transparent);
+      transform: translateX(-50%);
+      opacity: 0.5;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0 2rem;
+      align-items: start;
+      margin-bottom: 4rem;
+      position: relative;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content { order: 3; }
+    .timeline-item:nth-child(even) .timeline-empty { order: 1; }
+    .timeline-item:nth-child(odd) .timeline-content { order: 1; }
+    .timeline-item:nth-child(odd) .timeline-empty { order: 3; }
+
+    .timeline-center { order: 2; display: flex; flex-direction: column; align-items: center; }
+
+    .timeline-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      border: 2px solid;
+      background: var(--bg-secondary);
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+
+    .timeline-dot.q1 { border-color: var(--purple); color: var(--purple); box-shadow: var(--glow-purple); }
+    .timeline-dot.q2 { border-color: var(--cyan); color: var(--cyan); box-shadow: var(--glow-cyan); }
+    .timeline-dot.q3 { border-color: var(--pink); color: var(--pink); box-shadow: var(--glow-pink); }
+    .timeline-dot.q4 { border-color: #FFA000; color: #FFA000; box-shadow: 0 0 20px rgba(255,160,0,0.5); }
+
+    .timeline-dot.active::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid;
+      opacity: 0.4;
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+
+    .timeline-dot.q1.active::after { border-color: var(--purple); }
+
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.2); opacity: 0; }
+    }
+
+    .timeline-connector {
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, rgba(123,47,255,0.3), transparent);
+      margin-top: 4px;
+    }
+
+    .timeline-content {
+      padding: 1.75rem;
+      position: relative;
+    }
+
+    .timeline-quarter {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .q1-color { color: var(--purple); }
+    .q2-color { color: var(--cyan); }
+    .q3-color { color: var(--pink); }
+    .q4-color { color: #FFA000; }
+
+    .timeline-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .timeline-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .roadmap-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .roadmap-item .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .roadmap-item.done .dot { background: #00ff9d; box-shadow: 0 0 6px #00ff9d; }
+    .roadmap-item.done { color: rgba(255,255,255,0.8); }
+    .roadmap-item.in-progress .dot { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); animation: blink2 1s ease infinite; }
+    .roadmap-item.in-progress { color: var(--white); }
+    .roadmap-item.upcoming .dot { background: var(--border); }
+
+    @keyframes blink2 {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .timeline-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.75rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 1rem;
+    }
+
+    .status-active { background: rgba(123,47,255,0.15); color: var(--purple); border: 1px solid rgba(123,47,255,0.4); }
+    .status-upcoming { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+    .status-soon { background: rgba(0,194,255,0.1); color: var(--cyan); border: 1px solid rgba(0,194,255,0.3); }
+
+    .timeline-empty { }
+
+    /* Progress overview */
+    .progress-section {
+      padding: 4rem clamp(1rem,5vw,4rem);
+      background: linear-gradient(135deg, rgba(123,47,255,0.05), rgba(0,194,255,0.04));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 3rem auto 0;
+    }
+
+    .progress-card {
+      padding: 1.75rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .progress-circle {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1rem;
+      position: relative;
+    }
+
+    .progress-svg {
+      width: 80px;
+      height: 80px;
+      transform: rotate(-90deg);
+    }
+
+    .progress-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
+    .progress-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dasharray 1.5s ease; }
+
+    .progress-pct {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .progress-quarter {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .progress-name {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .timeline::before { left: 30px; }
+      .timeline-item { grid-template-columns: auto 1fr; }
+      .timeline-item:nth-child(even) .timeline-content,
+      .timeline-item:nth-child(odd) .timeline-content { order: 2; }
+      .timeline-item:nth-child(even) .timeline-empty,
+      .timeline-item:nth-child(odd) .timeline-empty { display: none; }
+      .timeline-center { order: 1; }
+      .progress-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 500px) {
+      .progress-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .timeline-dot { width: 44px; height: 44px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="tokenomics.html">Tokenomics</a></li>
+      <li><a href="genesis-nft.html">Genesis NFT</a></li>
+      <li><a href="roadmap.html" class="active">Roadmap</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tokenomics.html">Tokenomics</a>
+    <a href="genesis-nft.html">Genesis NFT</a>
+    <a href="roadmap.html" class="active">Roadmap</a>
+    <a href="team.html">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+  </div>
+
+  <main>
+    <div class="page-hero">
+      <div>
+        <div class="section-label reveal" style="justify-content:center;">2026 Vision</div>
+        <h1 class="section-title reveal delay-1">The AIAccess <span class="gradient-text">Roadmap</span></h1>
+        <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">A clear path from launch to cross-chain dominance. Transparent milestones, no vague promises.</p>
+      </div>
+    </div>
+
+    <!-- PROGRESS OVERVIEW -->
+    <section class="progress-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">2026 Overview</div>
+          <h2 class="section-title">Year <span class="gradient-text">at a Glance</span></h2>
+        </div>
+
+        <div class="progress-grid">
+          <div class="glass-card progress-card reveal delay-1">
+            <div class="progress-circle">
+              <svg class="progress-svg" viewBox="0 0 80 80">
+                <circle class="progress-bg" cx="40" cy="40" r="32"/>
+                <circle class="progress-fill" cx="40" cy="40" r="32" stroke="#7B2FFF"
+                  stroke-dasharray="120 200"/>
+              </svg>
+              <div class="progress-pct" style="color:var(--purple);">60%</div>
+            </div>
+            <div class="progress-quarter q1-color">Q1 2026</div>
+            <div class="progress-name">Foundation</div>
+          </div>
+
+          <div class="glass-card progress-card reveal delay-2">
+            <div class="progress-circle">
+              <svg class="progress-svg" viewBox="0 0 80 80">
+                <circle class="progress-bg" cx="40" cy="40" r="32"/>
+                <circle class="progress-fill" cx="40" cy="40" r="32" stroke="#00C2FF"
+                  stroke-dasharray="0 200"/>
+              </svg>
+              <div class="progress-pct" style="color:var(--cyan);">0%</div>
+            </div>
+            <div class="progress-quarter q2-color">Q2 2026</div>
+            <div class="progress-name">Launch</div>
+          </div>
+
+          <div class="glass-card progress-card reveal delay-3">
+            <div class="progress-circle">
+              <svg class="progress-svg" viewBox="0 0 80 80">
+                <circle class="progress-bg" cx="40" cy="40" r="32"/>
+                <circle class="progress-fill" cx="40" cy="40" r="32" stroke="#FF2FBE"
+                  stroke-dasharray="0 200"/>
+              </svg>
+              <div class="progress-pct" style="color:var(--pink);">0%</div>
+            </div>
+            <div class="progress-quarter q3-color">Q3 2026</div>
+            <div class="progress-name">Governance</div>
+          </div>
+
+          <div class="glass-card progress-card reveal delay-4">
+            <div class="progress-circle">
+              <svg class="progress-svg" viewBox="0 0 80 80">
+                <circle class="progress-bg" cx="40" cy="40" r="32"/>
+                <circle class="progress-fill" cx="40" cy="40" r="32" stroke="#FFA000"
+                  stroke-dasharray="0 200"/>
+              </svg>
+              <div class="progress-pct" style="color:#FFA000;">0%</div>
+            </div>
+            <div class="progress-quarter q4-color">Q4 2026</div>
+            <div class="progress-name">Expansion</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section class="timeline-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Milestones</div>
+          <h2 class="section-title">Detailed <span class="gradient-text">Timeline</span></h2>
+        </div>
+
+        <div class="timeline">
+
+          <!-- Q1 -->
+          <div class="timeline-item">
+            <div class="timeline-content glass-card tilt-card reveal-left delay-1">
+              <div class="timeline-quarter q1-color">Q1 2026 — Foundation</div>
+              <div class="timeline-title">Building the Base</div>
+              <div class="timeline-items-list">
+                <div class="roadmap-item in-progress"><div class="dot"></div>Whitelist &amp; early community building</div>
+                <div class="roadmap-item in-progress"><div class="dot"></div>NFT art creation &amp; reveal system</div>
+                <div class="roadmap-item in-progress"><div class="dot"></div>$ACCESS token development</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Smart contract audit (CertiK)</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Token launch on Solana</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Website &amp; branding launch</div>
+              </div>
+              <div class="timeline-status status-active"><i class="fa-solid fa-circle-notch fa-spin"></i> In Progress</div>
+            </div>
+            <div class="timeline-center">
+              <div class="timeline-dot q1 active"><i class="fa-solid fa-rocket"></i></div>
+              <div class="timeline-connector"></div>
+            </div>
+            <div class="timeline-empty"></div>
+          </div>
+
+          <!-- Q2 -->
+          <div class="timeline-item">
+            <div class="timeline-empty"></div>
+            <div class="timeline-center">
+              <div class="timeline-dot q2"><i class="fa-solid fa-gem"></i></div>
+              <div class="timeline-connector"></div>
+            </div>
+            <div class="timeline-content glass-card tilt-card reveal-right delay-2">
+              <div class="timeline-quarter q2-color">Q2 2026 — Launch</div>
+              <div class="timeline-title">Genesis Pass Mint &amp; First Presale</div>
+              <div class="timeline-items-list">
+                <div class="roadmap-item upcoming"><div class="dot"></div>Genesis Pass NFT public mint</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Staking platform goes live</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>First AI project presale</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>CEX/DEX listings for $ACCESS</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Governance portal v1 launch</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Partnership announcements</div>
+              </div>
+              <div class="timeline-status status-upcoming"><i class="fa-solid fa-clock"></i> Upcoming</div>
+            </div>
+          </div>
+
+          <!-- Q3 -->
+          <div class="timeline-item">
+            <div class="timeline-content glass-card tilt-card reveal-left delay-3">
+              <div class="timeline-quarter q3-color">Q3 2026 — Governance</div>
+              <div class="timeline-title">DAO &amp; Community Control</div>
+              <div class="timeline-items-list">
+                <div class="roadmap-item upcoming"><div class="dot"></div>Full DAO launch with on-chain voting</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Community-voted project listings</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Strategic partnership expansion</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Revenue sharing begins (Legendary)</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Enhanced staking tiers</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>5+ AI project presales completed</div>
+              </div>
+              <div class="timeline-status status-upcoming"><i class="fa-solid fa-clock"></i> Upcoming</div>
+            </div>
+            <div class="timeline-center">
+              <div class="timeline-dot q3"><i class="fa-solid fa-users"></i></div>
+              <div class="timeline-connector"></div>
+            </div>
+            <div class="timeline-empty"></div>
+          </div>
+
+          <!-- Q4 -->
+          <div class="timeline-item">
+            <div class="timeline-empty"></div>
+            <div class="timeline-center">
+              <div class="timeline-dot q4"><i class="fa-solid fa-globe"></i></div>
+            </div>
+            <div class="timeline-content glass-card tilt-card reveal-right delay-4">
+              <div class="timeline-quarter q4-color">Q4 2026 — Expansion</div>
+              <div class="timeline-title">Cross-Chain &amp; Second Collection</div>
+              <div class="timeline-items-list">
+                <div class="roadmap-item upcoming"><div class="dot"></div>Cross-chain expansion (Ethereum, Base)</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>AIAccess v2 platform release</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Second NFT collection launch</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>AI project incubation program</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Major exchange listings</div>
+                <div class="roadmap-item upcoming"><div class="dot"></div>Global community expansion</div>
+              </div>
+              <div class="timeline-status status-upcoming"><i class="fa-solid fa-clock"></i> Upcoming</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="how-it-works.html">How It Works</a></li><li><a href="tokenomics.html">Tokenomics</a></li><li><a href="genesis-nft.html">Genesis NFT</a></li></ul></div>
+      <div class="footer-col"><h4>More</h4><ul><li><a href="roadmap.html">Roadmap</a></li><li><a href="team.html">Team</a></li><li><a href="whitepaper.html">Whitepaper</a></li></ul></div>
+      <div class="footer-col"><h4>Community</h4><ul><li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li><li><a href="https://t.me/aikin_access" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tokenomics — AIAccess $ACCESS Token</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .page-hero {
+      min-height: 38vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 2rem;
+      position: relative;
+    }
+
+    /* Token Overview */
+    .token-overview {
+      padding: 2rem clamp(1rem,5vw,4rem) 5rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    /* Donut Chart */
+    .chart-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .donut-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 2rem;
+    }
+
+    .donut-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .donut-center-val {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 900;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .donut-center-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.3rem;
+      font-family: var(--font-heading);
+    }
+
+    /* Legend */
+    .chart-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      width: 100%;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .legend-row:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(123,47,255,0.4);
+    }
+
+    .legend-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-name {
+      flex: 1;
+      font-family: var(--font-heading);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .legend-pct {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .legend-val {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* Token Info Cards */
+    .token-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .token-info-header {
+      margin-bottom: 1rem;
+    }
+
+    .token-info-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      font-weight: 900;
+      margin-bottom: 0.75rem;
+    }
+
+    .token-info-header p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .token-stat-card {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .token-stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .token-stat-icon.purple { background: rgba(123,47,255,0.15); color: var(--purple); }
+    .token-stat-icon.cyan { background: rgba(0,194,255,0.15); color: var(--cyan); }
+    .token-stat-icon.pink { background: rgba(255,47,190,0.15); color: var(--pink); }
+
+    .token-stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: var(--font-heading);
+      margin-bottom: 0.2rem;
+    }
+
+    .token-stat-val {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    /* Tax Section */
+    .tax-section {
+      padding: 5rem clamp(1rem,5vw,4rem);
+      background: linear-gradient(135deg, rgba(123,47,255,0.05), rgba(0,194,255,0.05));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tax-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: 3rem auto 0;
+    }
+
+    .tax-card {
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tax-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .tax-card.burn::after { background: linear-gradient(90deg, var(--pink), var(--purple)); }
+    .tax-card.marketing::after { background: linear-gradient(90deg, var(--purple), var(--cyan)); }
+    .tax-card.rewards::after { background: linear-gradient(90deg, var(--cyan), var(--pink)); }
+
+    .tax-pct {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .tax-card.burn .tax-pct { color: var(--pink); text-shadow: 0 0 30px rgba(255,47,190,0.5); }
+    .tax-card.marketing .tax-pct { color: var(--purple); text-shadow: 0 0 30px rgba(123,47,255,0.5); }
+    .tax-card.rewards .tax-pct { color: var(--cyan); text-shadow: 0 0 30px rgba(0,194,255,0.5); }
+
+    .tax-name {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .tax-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    .tax-total {
+      max-width: 900px;
+      margin: 2rem auto 0;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .tax-total p {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .tax-total strong {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--white);
+    }
+
+    /* Distribution bars */
+    .distrib-section {
+      padding: 5rem clamp(1rem,5vw,4rem);
+    }
+
+    .distrib-bars {
+      max-width: 800px;
+      margin: 3rem auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .distrib-bar-item {}
+
+    .distrib-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .distrib-bar-label {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .distrib-bar-pct {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .distrib-bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .distrib-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .distrib-bar-fill.animated { transform: scaleX(1); }
+
+    @media (max-width: 900px) {
+      .overview-grid { grid-template-columns: 1fr; }
+      .tax-grid { grid-template-columns: 1fr; gap: 1rem; }
+    }
+
+    @media (max-width: 600px) {
+      .donut-container { width: 250px; height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="tokenomics.html" class="active">Tokenomics</a></li>
+      <li><a href="genesis-nft.html">Genesis NFT</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tokenomics.html" class="active">Tokenomics</a>
+    <a href="genesis-nft.html">Genesis NFT</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="team.html">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+  </div>
+
+  <main>
+    <div class="page-hero">
+      <div>
+        <div class="section-label reveal" style="justify-content:center;">$ACCESS Token</div>
+        <h1 class="section-title reveal delay-1">Tokenomics <span class="gradient-text">Breakdown</span></h1>
+        <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">A transparent, deflationary token designed to reward holders and fuel the AIAccess ecosystem.</p>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="token-overview">
+      <div class="overview-grid">
+        <!-- Donut Chart -->
+        <div class="chart-wrapper reveal-left">
+          <div class="donut-container">
+            <canvas id="tokenomicsDonut"></canvas>
+            <div class="donut-center">
+              <div class="donut-center-val" id="donut-center-val">100M</div>
+              <div class="donut-center-label" id="donut-center-label">Total Supply</div>
+            </div>
+          </div>
+
+          <div class="chart-legend">
+            <div class="legend-row">
+              <div class="legend-dot" style="background:#00C2FF;box-shadow:0 0 8px #00C2FF;"></div>
+              <div class="legend-name">Liquidity Pool</div>
+              <div>
+                <div class="legend-pct" style="color:#00C2FF;">30%</div>
+                <div class="legend-val">30,000,000</div>
+              </div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background:#7B2FFF;box-shadow:0 0 8px #7B2FFF;"></div>
+              <div class="legend-name">Staking Rewards</div>
+              <div>
+                <div class="legend-pct" style="color:#7B2FFF;">25%</div>
+                <div class="legend-val">25,000,000</div>
+              </div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background:#FF2FBE;box-shadow:0 0 8px #FF2FBE;"></div>
+              <div class="legend-name">Marketing &amp; Reserve</div>
+              <div>
+                <div class="legend-pct" style="color:#FF2FBE;">20%</div>
+                <div class="legend-val">20,000,000</div>
+              </div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background:#a855f7;box-shadow:0 0 8px #a855f7;"></div>
+              <div class="legend-name">Team (12M Vesting)</div>
+              <div>
+                <div class="legend-pct" style="color:#a855f7;">15%</div>
+                <div class="legend-val">15,000,000</div>
+              </div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-dot" style="background:#22d3ee;box-shadow:0 0 8px #22d3ee;"></div>
+              <div class="legend-name">Airdrops</div>
+              <div>
+                <div class="legend-pct" style="color:#22d3ee;">10%</div>
+                <div class="legend-val">10,000,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token Info -->
+        <div class="token-info reveal-right delay-2">
+          <div class="token-info-header">
+            <div class="section-label">Token Details</div>
+            <h2><span class="gradient-text">$ACCESS</span><br />Token Info</h2>
+            <p>The $ACCESS token is the utility, staking, and governance token of the AIAccess ecosystem. Designed to be deflationary with a 4% transaction tax that rewards holders and reduces supply.</p>
+          </div>
+
+          <div class="glass-card token-stat-card">
+            <div class="token-stat-icon purple"><i class="fa-solid fa-circle-nodes"></i></div>
+            <div>
+              <div class="token-stat-label">Token Name</div>
+              <div class="token-stat-val">$ACCESS</div>
+            </div>
+          </div>
+
+          <div class="glass-card token-stat-card">
+            <div class="token-stat-icon cyan"><i class="fa-solid fa-database"></i></div>
+            <div>
+              <div class="token-stat-label">Total Supply</div>
+              <div class="token-stat-val">100,000,000</div>
+            </div>
+          </div>
+
+          <div class="glass-card token-stat-card">
+            <div class="token-stat-icon pink"><i class="fa-solid fa-percent"></i></div>
+            <div>
+              <div class="token-stat-label">Transaction Tax</div>
+              <div class="token-stat-val">4% Total</div>
+            </div>
+          </div>
+
+          <div class="glass-card token-stat-card">
+            <div class="token-stat-icon purple"><i class="fa-brands fa-ethereum"></i></div>
+            <div>
+              <div class="token-stat-label">Blockchain</div>
+              <div class="token-stat-val">◎ Solana</div>
+            </div>
+          </div>
+
+          <div class="glass-card token-stat-card">
+            <div class="token-stat-icon cyan"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <div class="token-stat-label">Team Vesting</div>
+              <div class="token-stat-val">12 Months Lock</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAX SECTION -->
+    <section class="tax-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Transaction Tax</div>
+          <h2 class="section-title">4% Tax — <span class="gradient-text">Engineered for Growth</span></h2>
+          <p class="section-subtitle" style="margin:0 auto;text-align:center;">Every transaction contributes to burning supply, funding marketing, and rewarding holders.</p>
+        </div>
+
+        <div class="tax-grid">
+          <div class="glass-card tax-card burn reveal delay-1 tilt-card">
+            <div class="tax-pct">2%</div>
+            <div class="tax-name">🔥 Burn</div>
+            <p class="tax-desc">Half of every transaction tax is permanently burned, reducing total supply over time. Deflationary by design — scarcity increases with every trade.</p>
+          </div>
+          <div class="glass-card tax-card marketing reveal delay-2 tilt-card">
+            <div class="tax-pct">1%</div>
+            <div class="tax-name">📣 Marketing</div>
+            <p class="tax-desc">Funds ongoing marketing campaigns, influencer partnerships, exchange listings, and community growth initiatives to expand AIAccess reach.</p>
+          </div>
+          <div class="glass-card tax-card rewards reveal delay-3 tilt-card">
+            <div class="tax-pct">1%</div>
+            <div class="tax-name">💎 Rewards</div>
+            <p class="tax-desc">Distributed to stakers and NFT holders as additional passive income. Holding and staking $ACCESS is directly rewarded with every transaction.</p>
+          </div>
+        </div>
+
+        <div class="glass-card tax-total reveal delay-2">
+          <p>Total Transaction Tax: <strong>4% per transaction</strong></p>
+          <a href="whitepaper.html" class="btn-outline" style="font-size:0.85rem;padding:0.6rem 1.4rem;">View Full Whitepaper</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISTRIBUTION BARS -->
+    <section class="distrib-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Allocation</div>
+          <h2 class="section-title">Token <span class="gradient-text">Distribution</span></h2>
+        </div>
+
+        <div class="distrib-bars">
+          <div class="distrib-bar-item reveal delay-1">
+            <div class="distrib-bar-header">
+              <span class="distrib-bar-label">Liquidity Pool</span>
+              <span class="distrib-bar-pct" style="color:#00C2FF;">30% · 30,000,000 $ACCESS</span>
+            </div>
+            <div class="distrib-bar-track">
+              <div class="distrib-bar-fill" style="width:30%;background:linear-gradient(90deg,#00C2FF,#7B2FFF);"></div>
+            </div>
+          </div>
+
+          <div class="distrib-bar-item reveal delay-2">
+            <div class="distrib-bar-header">
+              <span class="distrib-bar-label">Staking Rewards</span>
+              <span class="distrib-bar-pct" style="color:#7B2FFF;">25% · 25,000,000 $ACCESS</span>
+            </div>
+            <div class="distrib-bar-track">
+              <div class="distrib-bar-fill" style="width:25%;background:linear-gradient(90deg,#7B2FFF,#FF2FBE);"></div>
+            </div>
+          </div>
+
+          <div class="distrib-bar-item reveal delay-3">
+            <div class="distrib-bar-header">
+              <span class="distrib-bar-label">Marketing &amp; Reserve</span>
+              <span class="distrib-bar-pct" style="color:#FF2FBE;">20% · 20,000,000 $ACCESS</span>
+            </div>
+            <div class="distrib-bar-track">
+              <div class="distrib-bar-fill" style="width:20%;background:linear-gradient(90deg,#FF2FBE,#7B2FFF);"></div>
+            </div>
+          </div>
+
+          <div class="distrib-bar-item reveal delay-4">
+            <div class="distrib-bar-header">
+              <span class="distrib-bar-label">Team (12-Month Vesting)</span>
+              <span class="distrib-bar-pct" style="color:#a855f7;">15% · 15,000,000 $ACCESS</span>
+            </div>
+            <div class="distrib-bar-track">
+              <div class="distrib-bar-fill" style="width:15%;background:linear-gradient(90deg,#a855f7,#00C2FF);"></div>
+            </div>
+          </div>
+
+          <div class="distrib-bar-item reveal delay-5">
+            <div class="distrib-bar-header">
+              <span class="distrib-bar-label">Airdrops</span>
+              <span class="distrib-bar-pct" style="color:#22d3ee;">10% · 10,000,000 $ACCESS</span>
+            </div>
+            <div class="distrib-bar-track">
+              <div class="distrib-bar-fill" style="width:10%;background:linear-gradient(90deg,#22d3ee,#7B2FFF);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="how-it-works.html">How It Works</a></li>
+          <li><a href="tokenomics.html">Tokenomics</a></li>
+          <li><a href="genesis-nft.html">Genesis NFT</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>More</h4>
+        <ul>
+          <li><a href="roadmap.html">Roadmap</a></li>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="whitepaper.html">Whitepaper</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li>
+          <li><a href="https://t.me/aikin_access" target="_blank">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script>
+    // Animate distribution bars on scroll
+    const bars = document.querySelectorAll('.distrib-bar-fill');
+    const barObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('animated'), 200);
+          barObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    bars.forEach(b => barObserver.observe(b));
+
+    // Chart.js interactive donut
+    const segments = [
+      { label: 'Liquidity Pool',       pct: '30%', val: '30,000,000', color: '#00C2FF' },
+      { label: 'Staking Rewards',      pct: '25%', val: '25,000,000', color: '#7B2FFF' },
+      { label: 'Marketing & Reserve',  pct: '20%', val: '20,000,000', color: '#FF2FBE' },
+      { label: 'Team (12M Vesting)',   pct: '15%', val: '15,000,000', color: '#a855f7' },
+      { label: 'Airdrops',             pct: '10%', val: '10,000,000', color: '#22d3ee' },
+    ];
+
+    const ctx = document.getElementById('tokenomicsDonut').getContext('2d');
+    const donutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: segments.map(s => s.label),
+        datasets: [{
+          data: [30, 25, 20, 15, 10],
+          backgroundColor: segments.map(s => s.color + 'CC'),
+          borderColor: segments.map(s => s.color),
+          borderWidth: 2,
+          hoverBackgroundColor: segments.map(s => s.color),
+          hoverBorderWidth: 3,
+        }]
+      },
+      options: {
+        cutout: '68%',
+        rotation: -90,
+        animation: { animateRotate: true, duration: 1200, easing: 'easeInOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const s = segments[ctx.dataIndex];
+                return ` ${s.pct}  ·  ${s.val} $ACCESS`;
+              }
+            },
+            backgroundColor: 'rgba(10,15,30,0.95)',
+            borderColor: 'rgba(123,47,255,0.4)',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#a0a0b8',
+            padding: 12,
+            titleFont: { family: 'Space Grotesk, sans-serif', weight: '700' },
+            bodyFont:  { family: 'Inter, sans-serif' },
+          }
+        },
+        onHover: (event, elements) => {
+          const centerVal   = document.getElementById('donut-center-val');
+          const centerLabel = document.getElementById('donut-center-label');
+          if (elements.length) {
+            const i = elements[0].index;
+            centerVal.style.background   = 'none';
+            centerVal.style.webkitTextFillColor = segments[i].color;
+            centerVal.style.color        = segments[i].color;
+            centerVal.textContent        = segments[i].pct;
+            centerLabel.textContent      = segments[i].label;
+          } else {
+            centerVal.style.background   = 'var(--grad-main)';
+            centerVal.style.webkitBackgroundClip = 'text';
+            centerVal.style.webkitTextFillColor  = 'transparent';
+            centerVal.style.backgroundClip       = 'text';
+            centerVal.style.color        = '';
+            centerVal.textContent        = '100M';
+            centerLabel.textContent      = 'Total Supply';
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

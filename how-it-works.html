@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How It Works — AIAccess</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .page-hero {
+      min-height: 40vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 3rem;
+      position: relative;
+    }
+
+    .page-hero-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(123,47,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Steps */
+    .steps-section {
+      padding: 2rem clamp(1rem, 5vw, 4rem) 6rem;
+    }
+
+    .steps-wrapper {
+      max-width: 900px;
+      margin: 3rem auto 0;
+      position: relative;
+    }
+
+    .steps-line {
+      position: absolute;
+      left: 40px;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--purple), var(--cyan), transparent);
+      opacity: 0.4;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 900;
+      position: relative;
+      z-index: 2;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .step-num.purple { color: var(--purple); box-shadow: var(--glow-purple); border-color: rgba(123,47,255,0.5); }
+    .step-num.cyan { color: var(--cyan); box-shadow: var(--glow-cyan); border-color: rgba(0,194,255,0.5); }
+    .step-num.pink { color: var(--pink); box-shadow: var(--glow-pink); border-color: rgba(255,47,190,0.5); }
+
+    .step-content {
+      flex: 1;
+      padding: 1.5rem 2rem;
+    }
+
+    .step-content h3 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.03em;
+    }
+
+    .step-content p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 1rem;
+    }
+
+    .step-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .step-tag {
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .step-tag.purple { background: rgba(123,47,255,0.15); color: var(--purple); border: 1px solid rgba(123,47,255,0.3); }
+    .step-tag.cyan { background: rgba(0,194,255,0.15); color: var(--cyan); border: 1px solid rgba(0,194,255,0.3); }
+    .step-tag.pink { background: rgba(255,47,190,0.15); color: var(--pink); border: 1px solid rgba(255,47,190,0.3); }
+
+    /* Vetting */
+    .vetting-section {
+      background: linear-gradient(135deg, rgba(123,47,255,0.05), rgba(0,194,255,0.05));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .vetting-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    .vetting-card {
+      padding: 1.75rem;
+    }
+
+    .vetting-icon {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .vetting-card h4 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .vetting-card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* Benefits */
+    .benefits-section { padding: 6rem clamp(1rem, 5vw, 4rem); }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    .benefits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .benefit-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .benefit-icon {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .benefit-icon.purple { background: rgba(123,47,255,0.15); color: var(--purple); }
+    .benefit-icon.cyan { background: rgba(0,194,255,0.15); color: var(--cyan); }
+    .benefit-icon.pink { background: rgba(255,47,190,0.15); color: var(--pink); }
+
+    .benefit-text h4 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .benefit-text p { font-size: 0.86rem; color: var(--muted); line-height: 1.6; }
+
+    .benefits-visual {
+      position: relative;
+    }
+
+    .benefits-visual-card {
+      padding: 2.5rem;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(123,47,255,0.12), rgba(0,194,255,0.08));
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .flow-step:last-child { border-bottom: none; }
+
+    .flow-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .flow-dot.purple { background: var(--purple); box-shadow: 0 0 10px var(--purple); }
+    .flow-dot.cyan { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+    .flow-dot.pink { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
+
+    .flow-text { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; }
+    .flow-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem; }
+
+    @media (max-width: 900px) {
+      .vetting-grid { grid-template-columns: 1fr 1fr; }
+      .benefits-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .vetting-grid { grid-template-columns: 1fr; }
+      .steps-line { display: none; }
+      .step-item { flex-direction: column; gap: 1rem; }
+      .step-num { width: 60px; height: 60px; font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html" class="active">How It Works</a></li>
+      <li><a href="tokenomics.html">Tokenomics</a></li>
+      <li><a href="genesis-nft.html">Genesis NFT</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html" class="active">How It Works</a>
+    <a href="tokenomics.html">Tokenomics</a>
+    <a href="genesis-nft.html">Genesis NFT</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="team.html">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="https://form.typeform.com/to/y2b6b9hP" class="nav-cta"><span>Get Whitelist</span></a>
+  </div>
+
+  <main>
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+      <div class="page-hero-glow"></div>
+      <div>
+        <div class="section-label reveal" style="justify-content:center;">Process</div>
+        <h1 class="section-title reveal delay-1">
+          How <span class="gradient-text">AIAccess</span> Works
+        </h1>
+        <p class="section-subtitle reveal delay-2" style="margin: 0 auto; text-align:center;">
+          From discovering a promising AI project to securing your allocation — here's the AIAccess journey.
+        </p>
+      </div>
+    </div>
+
+    <!-- STEPS -->
+    <section class="steps-section">
+      <div class="steps-wrapper">
+        <div class="steps-line"></div>
+
+        <div class="step-item reveal delay-1">
+          <div class="step-num purple">01</div>
+          <div class="glass-card step-content">
+            <h3>Acquire a Genesis Pass NFT</h3>
+            <p>Your entry point to AIAccess. Choose from 4 rarity tiers — Common, Rare, Epic, or Legendary. Each pass grants exclusive presale allocations, with higher rarities unlocking greater bonuses and privileges.</p>
+            <div class="step-tags">
+              <span class="step-tag purple">500 Total NFTs</span>
+              <span class="step-tag purple">4 Rarities</span>
+              <span class="step-tag purple">From 0.2 SOL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item reveal delay-2">
+          <div class="step-num cyan">02</div>
+          <div class="glass-card step-content">
+            <h3>Stake Your Pass &amp; Earn $ACCESS</h3>
+            <p>Once you hold a Genesis Pass, stake it to begin earning $ACCESS tokens passively. The longer you stake and the rarer your NFT, the more you accumulate. $ACCESS is the utility and governance token of the platform.</p>
+            <div class="step-tags">
+              <span class="step-tag cyan">Staking Rewards</span>
+              <span class="step-tag cyan">$ACCESS Tokens</span>
+              <span class="step-tag cyan">Passive Income</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item reveal delay-3">
+          <div class="step-num pink">03</div>
+          <div class="glass-card step-content">
+            <h3>Vote on Upcoming AI Projects</h3>
+            <p>NFT holders participate in governance — vote on which AI projects get featured on the platform next. Your voice shapes the future of AIAccess. Epic and Legendary holders get access to private deal flow channels.</p>
+            <div class="step-tags">
+              <span class="step-tag pink">DAO Governance</span>
+              <span class="step-tag pink">Community Voting</span>
+              <span class="step-tag pink">Private Channels</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item reveal delay-4">
+          <div class="step-num purple">04</div>
+          <div class="glass-card step-content">
+            <h3>Get Guaranteed Presale Allocations</h3>
+            <p>When a vetted AI project launches on AIAccess, your Genesis Pass guarantees you an allocation at the presale price — before the public gets access. Common holders get 1x, Legendary holders get 10x the base allocation.</p>
+            <div class="step-tags">
+              <span class="step-tag purple">1x–10x Allocation</span>
+              <span class="step-tag purple">Pre-Public Price</span>
+              <span class="step-tag purple">Guaranteed Access</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item reveal delay-5">
+          <div class="step-num cyan">05</div>
+          <div class="glass-card step-content">
+            <h3>Legendary: Earn Revenue Share</h3>
+            <p>The top 10 Legendary NFT holders participate in AIAccess platform revenue sharing. A portion of all platform fees is distributed back to Legendary holders — making it one of the most powerful passes in Web3.</p>
+            <div class="step-tags">
+              <span class="step-tag cyan">Revenue Share</span>
+              <span class="step-tag cyan">10 Legendary Only</span>
+              <span class="step-tag cyan">Platform Fees</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VETTING CRITERIA -->
+    <section class="vetting-section">
+      <div class="container">
+        <div class="text-center reveal">
+          <div class="section-label" style="justify-content:center;">Vetting Process</div>
+          <h2 class="section-title">How We Select <span class="gradient-text">AI Projects</span></h2>
+          <p class="section-subtitle" style="margin: 0 auto; text-align:center;">Every project that launches on AIAccess must pass our rigorous 6-point vetting process. No exceptions.</p>
+        </div>
+
+        <div class="vetting-grid">
+          <div class="glass-card vetting-card tilt-card reveal delay-1">
+            <div class="vetting-icon">👤</div>
+            <h4>Public Team</h4>
+            <p>No anonymous founders. Every core team member must be publicly identified and verifiable. Accountability is non-negotiable.</p>
+          </div>
+          <div class="glass-card vetting-card tilt-card reveal delay-2">
+            <div class="vetting-icon">⚙️</div>
+            <h4>Working Product</h4>
+            <p>Projects must have a working demo or live product. We don't list vaporware — only real, usable technology gets featured.</p>
+          </div>
+          <div class="glass-card vetting-card tilt-card reveal delay-3">
+            <div class="vetting-icon">🔐</div>
+            <h4>Smart Contract Audit</h4>
+            <p>All smart contracts must be audited by CertiK, Hacken, or SlowMist. Your investment security comes first.</p>
+          </div>
+          <div class="glass-card vetting-card tilt-card reveal delay-2">
+            <div class="vetting-icon">📊</div>
+            <h4>Fair Tokenomics</h4>
+            <p>12+ month vesting for team tokens, no excessive insider allocations. Sustainable tokenomics that protect holders.</p>
+          </div>
+          <div class="glass-card vetting-card tilt-card reveal delay-3">
+            <div class="vetting-icon">🧠</div>
+            <h4>Unique Tech or Data</h4>
+            <p>Projects must have a defensible technological edge — unique data, novel AI architecture, or proprietary systems that others can't easily replicate.</p>
+          </div>
+          <div class="glass-card vetting-card tilt-card reveal delay-4">
+            <div class="vetting-icon">🌐</div>
+            <h4>Real Community Traction</h4>
+            <p>Genuine organic community engagement, not inflated bot numbers. We verify real user interest and social proof.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFITS -->
+    <section class="benefits-section">
+      <div class="benefits-grid">
+        <div class="reveal-left">
+          <div class="section-label">NFT Holder Benefits</div>
+          <h2 class="section-title">Everything You <span class="gradient-text">Unlock</span></h2>
+          <div class="benefits-list mt-2">
+            <div class="benefit-row">
+              <div class="benefit-icon purple"><i class="fa-solid fa-key"></i></div>
+              <div class="benefit-text">
+                <h4>Guaranteed Presale Access</h4>
+                <p>Never miss an early-stage AI project again. Your pass is your ticket to every presale.</p>
+              </div>
+            </div>
+            <div class="benefit-row">
+              <div class="benefit-icon cyan"><i class="fa-solid fa-coins"></i></div>
+              <div class="benefit-text">
+                <h4>$ACCESS Token Staking Rewards</h4>
+                <p>Earn $ACCESS passively by staking your NFT. Compounding rewards over time.</p>
+              </div>
+            </div>
+            <div class="benefit-row">
+              <div class="benefit-icon pink"><i class="fa-solid fa-vote-yea"></i></div>
+              <div class="benefit-text">
+                <h4>Governance &amp; Voting Rights</h4>
+                <p>Shape the platform's direction. Vote on projects, partnerships, and platform upgrades.</p>
+              </div>
+            </div>
+            <div class="benefit-row">
+              <div class="benefit-icon purple"><i class="fa-solid fa-comments"></i></div>
+              <div class="benefit-text">
+                <h4>Private Community Access</h4>
+                <p>Epic and Legendary holders join exclusive private channels with deal flow and alpha calls.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal-right delay-2">
+          <div class="benefits-visual-card">
+            <h3 style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:1.5rem;">Your AIAccess Journey</h3>
+            <div class="flow-step">
+              <div class="flow-dot purple"></div>
+              <div>
+                <div class="flow-text">Mint Genesis Pass</div>
+                <div class="flow-sub">Choose your rarity tier</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot cyan"></div>
+              <div>
+                <div class="flow-text">Stake &amp; Earn $ACCESS</div>
+                <div class="flow-sub">Passive rewards accumulate daily</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot pink"></div>
+              <div>
+                <div class="flow-text">Vote on AI Projects</div>
+                <div class="flow-sub">Community-driven curation</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot purple"></div>
+              <div>
+                <div class="flow-text">Secure Presale Allocation</div>
+                <div class="flow-sub">Before public launch</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot cyan"></div>
+              <div>
+                <div class="flow-text">Profit &amp; Repeat</div>
+                <div class="flow-sub">Every launch, you're first</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana. Curating the future of artificial intelligence, one presale at a time.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="how-it-works.html">How It Works</a></li>
+          <li><a href="tokenomics.html">Tokenomics</a></li>
+          <li><a href="genesis-nft.html">Genesis NFT</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>More</h4>
+        <ul>
+          <li><a href="roadmap.html">Roadmap</a></li>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="whitepaper.html">Whitepaper</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li>
+          <li><a href="https://t.me/aikin_access" target="_blank">Telegram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
