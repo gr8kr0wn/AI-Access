@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mint — AIAccess Genesis Pass</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Solana Web3.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
+  <!-- Metaplex JS SDK (UMD build) -->
+  <script src="https://cdn.jsdelivr.net/npm/@metaplex-foundation/js@0.20.1/dist/index.iife.min.js"></script>
+
+  <style>
+    /* ── Page Hero ── */
+    .mint-hero {
+      min-height: 38vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 3rem) 2rem 2rem;
+      position: relative;
+    }
+
+    /* ── Phase Status Badge ── */
+    .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .phase-badge .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    .phase-badge.waiting {
+      background: rgba(122,122,122,0.12);
+      color: #aaa;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .phase-badge.waiting .dot { background: #aaa; }
+
+    .phase-badge.wl {
+      background: rgba(123,47,255,0.15);
+      color: var(--purple);
+      border: 1px solid rgba(123,47,255,0.4);
+    }
+    .phase-badge.wl .dot { background: var(--purple); box-shadow: 0 0 8px var(--purple); }
+
+    .phase-badge.public {
+      background: rgba(0,194,255,0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(0,194,255,0.4);
+    }
+    .phase-badge.public .dot { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
+    .phase-badge.soldout {
+      background: rgba(255,47,190,0.12);
+      color: var(--pink);
+      border: 1px solid rgba(255,47,190,0.4);
+    }
+    .phase-badge.soldout .dot { background: var(--pink); animation: none; }
+
+    /* ── Mint Section ── */
+    .mint-section {
+      padding: 1rem clamp(1rem,5vw,4rem) 6rem;
+    }
+
+    .mint-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    /* ── NFT Preview Card ── */
+    .nft-preview-wrap {
+      position: sticky;
+      top: calc(var(--nav-height) + 2rem);
+    }
+
+    .nft-main-card {
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, rgba(123,47,255,0.1), rgba(0,194,255,0.05));
+      border: 1px solid rgba(123,47,255,0.3);
+    }
+
+    .nft-main-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(123,47,255,0.08) 60deg, transparent 120deg);
+      animation: spin-slow 8s linear infinite;
+      pointer-events: none;
+    }
+
+    .nft-img-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+
+    .nft-img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+      display: block;
+    }
+
+    .nft-img-container:hover img { transform: scale(1.04); }
+
+    .nft-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(123,47,255,0.2), rgba(0,194,255,0.1));
+      gap: 1rem;
+      min-height: 360px;
+    }
+
+    .nft-img-placeholder i {
+      font-size: 4rem;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nft-img-placeholder span {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .nft-rarity-overlay {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+
+    .rarity-common { background: rgba(150,150,150,0.25); color: #ccc; border: 1px solid rgba(255,255,255,0.2); }
+    .rarity-rare { background: rgba(0,194,255,0.2); color: var(--cyan); border: 1px solid rgba(0,194,255,0.4); }
+    .rarity-epic { background: rgba(255,47,190,0.2); color: var(--pink); border: 1px solid rgba(255,47,190,0.4); }
+
+    .nft-card-info {
+      padding: 1.5rem;
+    }
+
+    .nft-card-name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+
+    .nft-card-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1.2rem;
+    }
+
+    .nft-traits {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .nft-trait {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem;
+      text-align: center;
+    }
+
+    .nft-trait-label {
+      font-family: var(--font-display);
+      font-size: 0.45rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .nft-trait-value {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    /* Rarity tiers preview */
+    .rarity-tiers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .rarity-tier-card {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .rarity-tier-card:hover { transform: translateY(-3px); }
+    .rarity-tier-card.active { border-color: var(--purple); box-shadow: var(--glow-purple); }
+    .rarity-tier-card.active-rare { border-color: var(--cyan); box-shadow: var(--glow-cyan); }
+    .rarity-tier-card.active-epic { border-color: var(--pink); box-shadow: var(--glow-pink); }
+    .rarity-tier-card.active-legendary { border-color: #FFD700; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    .rarity-legendary { background: rgba(255,215,0,0.2); color: #FFD700; border: 1px solid rgba(255,215,0,0.4); }
+
+    .rarity-tier-img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .rarity-tier-img-placeholder {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .rarity-tier-card > div:first-child {
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+    }
+
+    .rarity-tier-label {
+      font-family: var(--font-display);
+      font-size: 0.5rem;
+      letter-spacing: 0.12em;
+      text-align: center;
+      padding: 0.4rem;
+      background: rgba(0,0,0,0.4);
+    }
+
+    /* ── Mint Panel ── */
+    .mint-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Countdown */
+    .countdown-card {
+      padding: 1.5rem;
+      border-radius: 16px;
+      background: rgba(123,47,255,0.06);
+      border: 1px solid rgba(123,47,255,0.2);
+      text-align: center;
+    }
+
+    .countdown-label {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .countdown-grid {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .countdown-num {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 900;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      min-width: 2ch;
+      text-align: center;
+    }
+
+    .countdown-unit-label {
+      font-family: var(--font-display);
+      font-size: 0.45rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .countdown-sep {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--purple);
+      opacity: 0.5;
+      margin-bottom: 1rem;
+    }
+
+    /* Progress */
+    .progress-card {
+      padding: 1.5rem;
+      border-radius: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .progress-label {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .progress-count {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .progress-count span { color: var(--cyan); }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--grad-main);
+      border-radius: 100px;
+      transition: width 1s ease;
+      box-shadow: 0 0 12px rgba(123,47,255,0.5);
+    }
+
+    .progress-percent {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    /* Mint Box */
+    .mint-box {
+      padding: 2rem;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .mint-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+
+    .mint-price-label {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .mint-price-value {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 900;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .mint-price-sol {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-left: 0.25rem;
+    }
+
+    /* Wallet Status */
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+    }
+
+    .wallet-status.not-connected {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .wallet-status.connected {
+      background: rgba(0,194,255,0.07);
+      border: 1px solid rgba(0,194,255,0.3);
+      color: var(--cyan);
+    }
+
+    .wallet-status.wl-verified {
+      background: rgba(123,47,255,0.08);
+      border: 1px solid rgba(123,47,255,0.35);
+      color: var(--purple);
+    }
+
+    .wallet-addr {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Buttons */
+    .btn-connect {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background: var(--grad-main);
+      color: var(--white);
+      box-shadow: 0 0 30px rgba(123,47,255,0.3);
+    }
+
+    .btn-connect:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(123,47,255,0.6);
+    }
+
+    .btn-connect:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-mint {
+      width: 100%;
+      padding: 1.1rem;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-mint-wl {
+      background: linear-gradient(135deg, #7B2FFF, #a855f7);
+      color: var(--white);
+      box-shadow: 0 0 30px rgba(123,47,255,0.4);
+    }
+
+    .btn-mint-public {
+      background: var(--grad-main);
+      color: var(--white);
+      box-shadow: 0 0 30px rgba(0,194,255,0.3);
+    }
+
+    .btn-mint:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 0 60px rgba(123,47,255,0.7);
+    }
+
+    .btn-mint:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-mint .btn-shimmer {
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 2.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    .btn-mint-soldout {
+      background: rgba(255,47,190,0.1);
+      border: 1px solid rgba(255,47,190,0.3);
+      color: var(--pink);
+      cursor: not-allowed;
+    }
+
+    .wallet-options {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .wallet-options.show { display: flex; }
+
+    .wallet-options-title {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .wallet-option-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .wallet-option-btn:hover {
+      background: rgba(123,47,255,0.1);
+      border-color: var(--purple);
+      transform: translateX(4px);
+    }
+
+    .wallet-option-btn img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .wallet-option-btn .wallet-icon-fallback {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    /* ── Mint Success Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,9,20,0.92);
+      backdrop-filter: blur(16px);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(123,47,255,0.4);
+      border-radius: 24px;
+      padding: 2.5rem;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 0 80px rgba(123,47,255,0.2), 0 0 160px rgba(0,194,255,0.1);
+    }
+
+    .modal-overlay.show .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover { background: rgba(255,47,190,0.15); color: var(--pink); border-color: var(--pink); }
+
+    .modal-confetti {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      animation: bounce-in 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+    }
+
+    @keyframes bounce-in {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-nft-img {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      object-fit: cover;
+      margin: 0 auto 1.5rem;
+      display: block;
+      border: 2px solid rgba(123,47,255,0.4);
+      box-shadow: 0 0 40px rgba(123,47,255,0.3);
+    }
+
+    .modal-nft-img-placeholder {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(123,47,255,0.2), rgba(0,194,255,0.1));
+      border: 2px solid rgba(123,47,255,0.4);
+      font-size: 4rem;
+    }
+
+    .modal-rarity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .modal-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .modal-stat-label {
+      font-family: var(--font-display);
+      font-size: 0.45rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-stat-value {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .modal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--white);
+    }
+
+    .modal-btn.primary {
+      background: var(--grad-main);
+      border: none;
+      box-shadow: 0 0 20px rgba(123,47,255,0.3);
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-purple);
+    }
+
+    .modal-btn.primary:hover {
+      box-shadow: 0 0 40px rgba(123,47,255,0.6);
+    }
+
+    /* ── Info Cards Row ── */
+    .mint-info-section {
+      padding: 0 clamp(1rem,5vw,4rem) 5rem;
+    }
+
+    .mint-info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .mint-info-card {
+      padding: 1.75rem;
+      text-align: center;
+      border-radius: 16px;
+    }
+
+    .mint-info-icon {
+      font-size: 2rem;
+      margin-bottom: 0.9rem;
+      display: block;
+    }
+
+    .mint-info-card h4 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .mint-info-card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1.5rem;
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--cyan); color: var(--cyan); }
+    .toast.error { border-color: var(--pink); color: var(--pink); }
+    .toast.info { border-color: var(--purple); color: var(--purple); }
+
+    /* Disconnect button */
+    .btn-disconnect {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,47,190,0.3);
+      background: transparent;
+      color: var(--pink);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-left: auto;
+    }
+
+    .btn-disconnect:hover {
+      background: rgba(255,47,190,0.1);
+      border-color: var(--pink);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .mint-layout { grid-template-columns: 1fr; }
+      .nft-preview-wrap { position: static; }
+      .mint-info-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 580px) {
+      .mint-info-grid { grid-template-columns: 1fr; }
+      .rarity-tiers { grid-template-columns: repeat(4,1fr); }
+      .modal-card { padding: 1.75rem 1.25rem; }
+      .countdown-num { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+      <span>AIAccess</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="tokenomics.html">Tokenomics</a></li>
+      <li><a href="genesis-nft.html">Genesis NFT</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="whitepaper.html">Whitepaper</a></li>
+    </ul>
+    <a href="mint.html" class="nav-cta active"><span>Mint Now</span></a>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tokenomics.html">Tokenomics</a>
+    <a href="genesis-nft.html">Genesis NFT</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="team.html">Team</a>
+    <a href="whitepaper.html">Whitepaper</a>
+    <a href="mint.html" class="nav-cta"><span>Mint Now</span></a>
+  </div>
+
+  <main>
+    <!-- HERO -->
+    <div class="mint-hero">
+      <div>
+        <div id="phaseBadge" class="phase-badge waiting reveal" style="margin:0 auto 1.5rem;">
+          <span class="dot"></span>
+          <span id="phaseBadgeText">Loading...</span>
+        </div>
+        <h1 class="section-title reveal delay-1">AIAccess <span class="gradient-text">Genesis Mint</span></h1>
+        <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">
+          500 Genesis Passes. Two phases. One entry point into the AI agent economy on Solana.
+        </p>
+      </div>
+    </div>
+
+    <!-- MINT SECTION -->
+    <section class="mint-section">
+      <div class="mint-layout">
+
+        <!-- LEFT: NFT Preview -->
+        <div class="nft-preview-wrap reveal-left">
+          <div class="nft-main-card glass-card">
+            <div class="nft-img-container" id="mainNftImgContainer">
+              <!-- Image or placeholder injected by JS -->
+            </div>
+            <div class="nft-card-info">
+              <div class="nft-card-name" id="mainNftName">AIACCESS Genesis Pass</div>
+              <p class="nft-card-desc">Your gateway to guaranteed early access at every AI agent IDO on Solana. Rarity determines your allocation multiplier.</p>
+              <div class="nft-traits">
+                <div class="nft-trait">
+                  <div class="nft-trait-label">Type</div>
+                  <div class="nft-trait-value">Genesis</div>
+                </div>
+                <div class="nft-trait">
+                  <div class="nft-trait-label">Supply</div>
+                  <div class="nft-trait-value" id="traitSupply">300</div>
+                </div>
+                <div class="nft-trait">
+                  <div class="nft-trait-label">Chain</div>
+                  <div class="nft-trait-value">◎ SOL</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rarity tiers -->
+          <div class="rarity-tiers">
+            <div class="rarity-tier-card active" id="tierCommon" onclick="previewRarity('common')">
+              <div id="tierCommonImgWrap"></div>
+              <div class="rarity-tier-label" style="color:#ccc;">Common · 1x</div>
+            </div>
+            <div class="rarity-tier-card" id="tierRare" onclick="previewRarity('rare')">
+              <div id="tierRareImgWrap"></div>
+              <div class="rarity-tier-label" style="color:var(--cyan);">Rare · 2x</div>
+            </div>
+            <div class="rarity-tier-card" id="tierEpic" onclick="previewRarity('epic')">
+              <div id="tierEpicImgWrap"></div>
+              <div class="rarity-tier-label" style="color:var(--pink);">Epic · 5x</div>
+            </div>
+            <div class="rarity-tier-card" id="tierLegendary" onclick="previewRarity('legendary')">
+              <div id="tierLegendaryImgWrap"></div>
+              <div class="rarity-tier-label" style="color:#FFD700;">Legendary · 10x · 25</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Mint Panel -->
+        <div class="mint-panel reveal-right">
+
+          <!-- Countdown -->
+          <div class="countdown-card glass-card" id="countdownCard">
+            <div class="countdown-label" id="countdownLabel">Loading phase...</div>
+            <div class="countdown-grid" id="countdownGrid">
+              <div class="countdown-unit">
+                <div class="countdown-num" id="cdDays">00</div>
+                <div class="countdown-unit-label">Days</div>
+              </div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit">
+                <div class="countdown-num" id="cdHours">00</div>
+                <div class="countdown-unit-label">Hours</div>
+              </div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit">
+                <div class="countdown-num" id="cdMins">00</div>
+                <div class="countdown-unit-label">Mins</div>
+              </div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit">
+                <div class="countdown-num" id="cdSecs">00</div>
+                <div class="countdown-unit-label">Secs</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div class="progress-card glass-card">
+            <div class="progress-header">
+              <span class="progress-label">Minted</span>
+              <span class="progress-count"><span id="mintedCount">0</span> / <span style="color:var(--muted);">500</span></span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+            </div>
+            <div class="progress-percent" id="progressPercent">0% minted</div>
+          </div>
+
+          <!-- Mint Box -->
+          <div class="mint-box glass-card">
+
+            <!-- Price Row -->
+            <div class="mint-price-row" id="priceRow">
+              <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <span class="mint-price-label" id="pricePhaseLabel">WL Price</span>
+                <span>
+                  <span class="mint-price-value" id="priceValue">0.2</span>
+                  <span class="mint-price-sol">SOL</span>
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:0.3rem;text-align:right;">
+                <span class="mint-price-label">Public Price</span>
+                <span>
+                  <span class="mint-price-value" id="publicPriceValue" style="font-size:1rem;opacity:0.6;">0.4</span>
+                  <span class="mint-price-sol">SOL</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Tier Perks -->
+            <div id="tierPerksBox" style="padding:0.9rem 1.1rem;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);display:flex;flex-direction:column;gap:0.45rem;">
+              <div style="font-family:var(--font-display);font-size:0.5rem;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem;">Pass Benefits</div>
+              <div id="tierPerksList"></div>
+            </div>
+
+            <!-- Wallet Status -->
+            <div class="wallet-status not-connected" id="walletStatus">
+              <i class="fa-solid fa-wallet"></i>
+              <span id="walletStatusText">No wallet connected</span>
+            </div>
+
+            <!-- Wallet Options (hidden by default) -->
+            <div class="wallet-options" id="walletOptions">
+              <div class="wallet-options-title">Choose Wallet</div>
+              <button class="wallet-option-btn" onclick="connectWallet('phantom')">
+                <img src="Phantom-Icon_App.svg" width="28" height="28" style="border-radius:6px;" alt="Phantom" />
+                Phantom
+              </button>
+              <button class="wallet-option-btn" onclick="connectWallet('solflare')">
+                <img src="Solflare_id5j73wBTF_1.svg" width="28" height="28" style="border-radius:6px;" alt="Solflare" />
+                Solflare
+              </button>
+              <button class="wallet-option-btn" onclick="connectWallet('backpack')">
+                <div class="wallet-icon-fallback" style="background:#1a1a1a;border-radius:6px;display:flex;align-items:center;justify-content:center;width:28px;height:28px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                    <path fill="#E33E3F" fill-rule="evenodd" d="M13.194 4.415c.666 0 1.29.088 1.87.25C14.496 3.37 13.32 3 12.011 3c-1.312 0-2.49.37-3.055 1.673a6.6 6.6 0 0 1 1.86-.258zm-2.529 1.302c-3.163 0-4.965 2.444-4.965 5.459v3.097c0 .301.256.54.573.54h11.454c.317 0 .573-.239.573-.54v-3.097c0-3.015-2.096-5.459-5.259-5.459zm1.33 5.486c1.108 0 2.005-.882 2.005-1.97 0-1.087-.897-1.968-2.005-1.968-1.106 0-2.004.881-2.004 1.969 0 1.087.898 1.969 2.005 1.969M5.7 16.633a.56.56 0 0 1 .573-.546h11.454a.56.56 0 0 1 .573.546v3.275c0 .603-.513 1.092-1.145 1.092H6.845c-.632 0-1.145-.489-1.145-1.092z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                Backpack
+              </button>
+              <p id="mobileWalletHint" style="display:none;font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.25rem;line-height:1.5;">
+                <i class="fa-solid fa-mobile-screen" style="margin-right:0.3rem;"></i>On mobile, tapping will open the wallet app directly.
+              </p>
+            </div>
+
+            <!-- Connect Button -->
+            <button class="btn-connect" id="connectBtn" onclick="toggleWalletOptions()">
+              <i class="fa-solid fa-link"></i> Connect Wallet
+            </button>
+
+            <!-- Mint Buttons (hidden until connected) -->
+            <button class="btn-mint btn-mint-wl" id="mintWlBtn" style="display:none;" onclick="mintNFT('wl')">
+              <span class="btn-shimmer"></span>
+              <i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — 0.2 SOL</span>
+            </button>
+
+            <button class="btn-mint btn-mint-public" id="mintPublicBtn" style="display:none;" onclick="mintNFT('public')">
+              <span class="btn-shimmer"></span>
+              <i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — 0.4 SOL</span>
+            </button>
+
+            <button class="btn-mint btn-mint-soldout" id="soldOutBtn" style="display:none;" disabled>
+              <i class="fa-solid fa-ban"></i> Sold Out
+            </button>
+
+            <!-- Phase info note -->
+            <p style="font-size:0.75rem;color:var(--muted);text-align:center;line-height:1.5;" id="phaseNote">
+              WL Phase: May 14 · Public Phase: May 15 · Max supply: 500
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- INFO CARDS -->
+    <section class="mint-info-section">
+      <div class="mint-info-grid">
+        <div class="glass-card mint-info-card tilt-card reveal delay-1">
+          <span class="mint-info-icon">🎯</span>
+          <h4>Whitelist Phase</h4>
+          <p>Starts May 14, 2026. WL holders get 50% off — Common 0.2 SOL, Rare 0.4 SOL, Epic 1 SOL, Legendary 2 SOL. 24-hour exclusive window before public opens.</p>
+        </div>
+        <div class="glass-card mint-info-card tilt-card reveal delay-2">
+          <span class="mint-info-icon">🌐</span>
+          <h4>Public Phase</h4>
+          <p>Starts May 15, 2026. Open to all — Common 0.4 SOL, Rare 0.8 SOL, Epic 2 SOL, Legendary 4 SOL. First come, first served until all 500 passes are minted.</p>
+        </div>
+        <div class="glass-card mint-info-card tilt-card reveal delay-3">
+          <span class="mint-info-icon">⚡</span>
+          <h4>Instant Utility</h4>
+          <p>Your pass is active immediately after mint. Access launchpad IDOs, staking rewards, and governance from day one.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="logo_for_AIAccess_Dark_backg_2.jpg" alt="AIAccess Logo" />
+          <span style="font-family:var(--font-display);background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;font-weight:700;">AIAccess</span>
+        </div>
+        <p>The first launchpad dedicated to AI agents on Solana.</p>
+        <div class="footer-social">
+          <a href="https://x.com/aikin_access" target="_blank" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/AIAccessCommunity" target="_blank" class="social-icon"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="how-it-works.html">How It Works</a></li><li><a href="tokenomics.html">Tokenomics</a></li><li><a href="genesis-nft.html">Genesis NFT</a></li></ul></div>
+      <div class="footer-col"><h4>More</h4><ul><li><a href="roadmap.html">Roadmap</a></li><li><a href="team.html">Team</a></li><li><a href="whitepaper.html">Whitepaper</a></li><li><a href="mint.html">Mint</a></li></ul></div>
+      <div class="footer-col"><h4>Community</h4><ul><li><a href="https://x.com/aikin_access" target="_blank">Twitter / X</a></li><li><a href="https://t.me/AIAccessCommunity" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="glow-divider"></div>
+    <div class="footer-bottom" style="margin-top:2rem;">
+      <span>© 2026 AIAccess. All rights reserved.</span>
+      <span>Built on <span>◎ Solana</span> · Powered by <span>$ACCESS</span></span>
+    </div>
+  </footer>
+
+  <!-- SUCCESS MODAL -->
+  <div class="modal-overlay" id="mintModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-confetti" id="modalEmoji">🎉</div>
+      <div class="modal-title">You Minted!</div>
+      <p class="modal-subtitle" id="modalSubtitle">AIACCESS Genesis Pass</p>
+      <div id="modalImgWrap"></div>
+      <div class="modal-rarity-badge" id="modalRarityBadge"></div>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <div class="modal-stat-label">Rarity</div>
+          <div class="modal-stat-value" id="modalRarity">—</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-label">Multiplier</div>
+          <div class="modal-stat-value" id="modalMultiplier">—</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <a id="solscanBtn" href="#" target="_blank" class="modal-btn primary">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> View in Wallet
+        </a>
+        <a id="twitterShareBtn" href="#" target="_blank" class="modal-btn">
+          <i class="fa-brands fa-x-twitter"></i> Share
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="main.js"></script>
+  <script>
+    /* ============================================================
+       MINT PAGE — CONFIGURATION
+    ============================================================ */
+    const CANDY_MACHINE_ID = 'HwdypmTVwuwEfULnasrLcb7SuGvJekmcWRq1RWb5gDe';
+    const TOTAL_SUPPLY     = 500;
+    const WL_START         = new Date('2026-05-14T00:00:00Z');
+    const PUBLIC_START     = new Date('2026-05-15T00:00:00Z');
+    const METADATA_BASE    = 'https://ipfs.filebase.io/ipfs/QmXebbGUMEGxSrWvPiRjqkyPE3aBXTvQdXphLvxFbQXK2N/';
+
+    const NFT_IMAGE = 'nft-preview.jpg';
+    const NFT_IMAGES = {
+      common    : NFT_IMAGE,
+      rare      : NFT_IMAGE,
+      epic      : NFT_IMAGE,
+      legendary : NFT_IMAGE
+    };
+
+    const RARITY_CONFIG = {
+      common    : {
+        label:'Common',    emoji:'🗝️', multiplier:'1x',  color:'#ccc',
+        bg:'rgba(150,150,150,0.15)', border:'rgba(255,255,255,0.2)',
+        wlPrice:0.2, publicPrice:0.4, supply:300,
+        perks:['1x Presale Allocation','$ACCESS Staking','Governance Voting']
+      },
+      rare      : {
+        label:'Rare',      emoji:'💎', multiplier:'2x',  color:'var(--cyan)',
+        bg:'rgba(0,194,255,0.15)',   border:'rgba(0,194,255,0.4)',
+        wlPrice:0.4, publicPrice:0.8, supply:125,
+        perks:['2x Presale Allocation','Early Project Access','$ACCESS Staking','Governance Voting']
+      },
+      epic      : {
+        label:'Epic',      emoji:'⚡', multiplier:'5x',  color:'var(--pink)',
+        bg:'rgba(255,47,190,0.15)',  border:'rgba(255,47,190,0.4)',
+        wlPrice:1, publicPrice:2, supply:50,
+        perks:['5x Presale Allocation','Private Alpha Chat','Early Project Access','Enhanced Staking APY']
+      },
+      legendary : {
+        label:'Legendary', emoji:'👑', multiplier:'10x', color:'#FFD700',
+        bg:'rgba(255,215,0,0.15)',   border:'rgba(255,215,0,0.4)',
+        wlPrice:2, publicPrice:4, supply:25,
+        perks:['10x Presale Allocation','Revenue Share','Private Alpha Chat','Max Staking APY']
+      }
+    };
+
+    /* WL addresses from WL.txt */
+    const WL_ADDRESSES = [
+      "EiJVTTqWVH8tUkwVNjeAunY4jidaFYWWn1iZMX7C3cY","BTjKpDznSG1kithThaiMSkKrXnFruqZEaBBhz5b2qsX5",
+      "GScinhFURjCodARtiZaChAQ9nS7TMr6S5qebNNgUs5yJ","C7BKei9Y6JwWvpBYAfc9mrKrsX2qSiurW2cbGiFTKqv",
+      "CvwJGsWR3cELZNx6VDQbdBnLpiZ9zaHwzcrLZPa8S5hj","G1eBfJVMxGZ3z3rjdNUv3sY3CXjWEeqWqRTfzN23bumX",
+      "Fg2Co92jBHazTX3gJgGEebNSjPeBsyrRzRCxAyiLuBKV","4R3gcBEQ8mM3mfR5NvdX93nDxWPzBYQTCLS1yHtY68SS",
+      "HPcYECTC1eQ7pnPZdFuM7m9oHfo4jqjQD8JFghms9FNU","3YwTm6NtGi3ZhBYhuqFX1eB3EhdBoB6uVfPNyC99FZfa",
+      "4yUcNPx78EDyoBssfJ5fMCPrGBoHY39cRKpLaVrZoJ81","FKg7BjoVVZjzHWT1vJHFgbSzhBKAa2HHg7oj6M2Fks3X",
+      "8C4uYMsLMzS32HLuQYjHWnjDrKpPYGkSTMdBHAm3BmzA","5YejZtqZYXswfmm5UJBp4biQHj2s6DSwwCbjzGVRcgtA",
+      "6tU21zMJVWk9xQnDSsWzrq1MCfnDwRa1bkvYBPxiBpWF","5U4ZHPb6XE8f4kh1xnaQTr7q5ejXTorsT9R2QfzH1fSf",
+      "CnDznJvdT2Pr69MDEYQgvmHxn3mpTzZbmb2f7K6or61N","DwWj3EuyaL2ufZASdZ3DPGyaSEqnjzAPxfLAxq5MRLhJ",
+      "3xyENYadE8L6d6eeompmJm1igBDt1Lew3GQ8zQ3Sou8o","AiRi9PuTH3kgCHbJknWgWpPnMKu9C35P2ebnFJZJe1Tg",
+      "JD3aUQ3CiAxcH24yNRFPLPyn1ohjKHB4fBvNSMUoKyJE","2s8G2FAU5biU26wPjwM99Lpq1kdsk1iKyLKXoTVPfndg",
+      "FiWSCAeuKoBptW1Ad8ccFCEatusjsEXvxVp2Fia5hBMF","CRMFKod6qLFkQEfe2NuYLpMGJQAdeefZTZVzfc8SGiCu",
+      "HC8tG8XXm68jdcsvDQBDXVmbkG4jZrxVEf2qoy2XNrZu","EotTbJRvEQPJSpHtXmEwMAzP6pwfDEeGQpTt1rYtHTXw",
+      "6Rm5oH5p4VC7hRNFsZiLfs6ML5SQvv7WGrjs9WLbLDML","7U5PCysGpsR9SocntXQ78ukL3VgNDMsaNsAL8d77Vx8D",
+      "BbLeJkvjXdYwLLJ5uRK3PsjrF5cQHMfmRbH3QFwdtWXo","5qQxrBvhTpvNyJoEZ5zBUtXrm21GFW4JuPuBxC5PDzcv",
+      "2qi7ZJRJuVNkqrmZyuxR67UzXgzCyzzZGtGJdWTLBCUh","B2uG1DLXXv5pTwHuSdELpNeFTWcZdEPZJT9siz8Wbhw4",
+      "2jEf1hJhuWMszwrtE4DJv23sMgXwbZEVZ9HyXHf8bh4E","Ac2hdQGTNVKxeaDh11SGrhTzdnc2D9nTTEAjLTwCcZSW",
+      "7sXh5bbWxdMiZwKrjUMFRxMMUC5ARf3ySX1b3uK2yxD5","9ZkPKHNzaLo3usvqeirCdrbpasX32xFpydMVbHsHWcK1",
+      "5iWYn28i6ax8cuDqmeZCcwKS24hFQXyEgiAyHSmwpT6Y","ZyGFBms6QBLzEoLZK5DWBdveFAZSQzkssFQGGsVYejm",
+      "AGv1MUDiHJtWXbdwCRGvHWfVPLf6NP9QJ36SGabMd4vu","J2xuxWoTSjKhAcZMtBfrvAJbtuz24WRuff2QjXKt1hmN",
+      "FpVDrY5n7ggHuwVGSTNe68C4zp5yGgYXusJgXmNo1iHH","4T4eg2SVzPruVkGH4FQ6ZUhib9mbL9ZrGkxu6cnLikdU",
+      "GGJcUppkFuh4fNwZueM5zrgF1kLZP1Xu719vkREaedFb","JBwsFfDLbB9Bc9dVmbNiB14xvrLth1mTx3AnbqQLmDtS",
+      "83QxCmDC27bNepfdtE3VqaXKj25RMuAewcJpA3zq9Bgi","2yaL1TWUahBXBLSvcnKBiiTHFyncCNKbYbbuevPdQBhK",
+      "2P8KjynmzzY3GxsSqcEdYoS4fpjWpoVCY7nCrqSn81UA","4ZzajcF2tVVMsJowwYJCddg1Qmy4V6sQ8fsT4f1mjYEv",
+      "DZusk3oWWppZ6byGmrSgjLd59P2J8W3TQyhDERgpPuH","EQwVdMyJEQNDgcgqZB41cEKBefJ195LJAWiFbcg4xEgH",
+      "A1LKdryneE1iqzcpL1WJ4xiPFip9TYbJNpCJbxLS9Vuq","8rFQcYGGpp7SFK9jNR6UPvSa6L2jz9LNE5cyT4YDsKeo",
+      "8mTKACsN4nRYCw6ZsoBFUMy76HXq6H3g3GMcDBDjuPoG","9Hfu27fo6wKhiTmPHq3QtzGccCSvM9NoovVwAVe2L43v",
+      "4GpiPpA1n7kBU4NWPSV7yusun1RnfXqU4sbkk1jbRS2o","HRx5cKhKujB65BpWZ82vUYScg3NrrK1S6BnVqwwi6boN",
+      "43Y633CK3Ns3ByU7u3uPjKk3qx7Ed67Q8ALGHZBuGPPe","GQXPa6gNKDoxxiLT5Seekmpc341dNfq3KC55WYtf8QnY",
+      "3kzU1N9tFB69i1PrKKYXpv6gSLeCPBjA9VBm2CCLKqSn","CypBHKWDhPAPYCSGP5PmanySsSpSyXGTARvvhAcw5Xnp",
+      "DTLBofhCqX9pLZNPWMU6guPbSAGXZrt8UAWEcBFFpump","E6KQ246oAifd1aBiHrJWh6oG9nvQwGQHGVxZY8mfC8Zi",
+      "BSMhmTgHqmZ6RuHxNRRsX57HCPtMK7w3yP9tqmQU6JE2","4rsSBWQ6tpbJfcA9wMRwG4ngMSpznTcWpPtiL2SiCUk2",
+      "8BkvcoqaHHGxUtNcb35eFzx2arUvim35LZgzzMxc3Xk7","3NpesbwrBgwACf5tGhvFf58a5KUPViNVYgMVSumVwa1z",
+      "DZtjLX8wCR5PXfFQy9Sb5MxvhX7bVB3iweriPmdZpSma","FS3JzcPVD3Eaazs9Lwob6yHnW1cUEZwRpWv7nPPWXyJr",
+      "9tTRqKsWMiivhCEcZtujLcEjsHwRoQzzY2CcWk8vBnhv","5jQkyXVgAHrLEuESedXiVsdgkETUbRRLhb6HLk1iW6fV",
+      "5eBAVWQWkckaZS9W8wg5t79KwV7RkdCu4sRuE15eutwp","esYPwky87bKwma5BJfjdjF8PAEnBaPB3VwXwzQSwTTf",
+      "BYpiLSVvM1484hSviGZeU3x9LEiJG5mNK2e23XK6xwHh","BQmsHBagRvE4rLQVQXkZSgcmET7Pb76zLVkFLTTU5R3j",
+      "EZweLkDmp7Tq69gMMgSDzGeaKzDf4na8SvW819zQZF8p","2MGEAT7uPuJrXFVdLcNLC4rryQuKMt1npNBqvQ3d3cZK",
+      "4bqPimceNLJAj2R2ch4GmxHrF3sSRhN161gTYoYVhg9n","678oKxD8J65iN2rwMmxqY2opefeJDZZvxt4C4eeVLHAd",
+      "55W73hV5x7spwehdxMUesavMCWvNivYRjmvcgN5jBPBJ","AkZeX3hKyu9FiWk9i5amzAMs4Xnh7BqzpMhZ6jr9TyZg",
+      "BFUfbFzum4pzayS6XmdXbxJrRQ1MLRM8xHX4x3aq7mEn","78yQT1tZW1WyNfTGM8Adb46Nvw6dr7EjGDZ3KEAURvtM",
+      "FKmc9AC9qTtQRQVuaUEURLX7XVjWKSw6DoY3HhxUVDEg","EJdgmUGXeusbBZ81CUWtVDuJduwwRe9HxcXegJhNHJmy",
+      "J5Q85Mui21nPsYj1ECMZr2h5GqupS5Z8hdkawopHMw6m"
+    ];
+
+    /* ============================================================
+       STATE
+    ============================================================ */
+    let connectedWallet   = null;
+    let isWLVerified      = false;
+    let mintedCount       = 0; // Will be fetched from Candy Machine in production
+    let currentPreview    = 'common';
+    let countdownInterval = null;
+
+    /* ============================================================
+       PHASE LOGIC
+    ============================================================ */
+    function getPhase() {
+      const now = Date.now();
+      if (mintedCount >= TOTAL_SUPPLY)         return 'soldout';
+      if (now >= PUBLIC_START.getTime())        return 'public';
+      if (now >= WL_START.getTime())            return 'wl';
+      return 'waiting';
+    }
+
+    function updatePhaseUI() {
+      const phase     = getPhase();
+      const badge     = document.getElementById('phaseBadge');
+      const badgeText = document.getElementById('phaseBadgeText');
+      const phaseNote = document.getElementById('phaseNote');
+
+      // Reset badge classes
+      badge.className = 'phase-badge reveal visible ' + phase;
+
+      if (phase === 'soldout') {
+        badgeText.textContent = 'Sold Out';
+        stopCountdown();
+        document.getElementById('countdownCard').style.display = 'none';
+      } else if (phase === 'public') {
+        badgeText.textContent  = 'Public Mint Live';
+        startCountdown(null, 'Public mint is live — mint before sold out!');
+        phaseNote.textContent  = 'Public Phase is LIVE · ' + (TOTAL_SUPPLY - mintedCount) + ' remaining';
+      } else if (phase === 'wl') {
+        badgeText.textContent  = 'WL Mint Live';
+        startCountdown(PUBLIC_START, 'Public phase opens in');
+        phaseNote.textContent  = 'WL Phase LIVE · Public opens May 15';
+      } else {
+        badgeText.textContent  = 'Not Started';
+        startCountdown(WL_START, 'WL Mint opens in');
+        phaseNote.textContent  = 'WL starts May 14 · Public starts May 15 · Supply: 500';
+      }
+
+      // Refresh tier prices for currently selected tier
+      updateTierPriceAndPerks(currentPreview);
+      updateMintButtons();
+    }
+
+    /* ============================================================
+       COUNTDOWN
+    ============================================================ */
+    function startCountdown(targetDate, label) {
+      stopCountdown();
+      document.getElementById('countdownCard').style.display = '';
+      document.getElementById('countdownLabel').textContent  = label || '';
+
+      if (!targetDate) {
+        document.getElementById('countdownLabel').textContent = 'Mint is LIVE — get yours now!';
+        document.getElementById('countdownGrid').innerHTML =
+          '<div style="font-family:var(--font-display);font-size:1.5rem;color:var(--cyan);letter-spacing:0.1em;padding:0.5rem 0;">🚀 LIVE NOW</div>';
+        return;
+      }
+
+      function tick() {
+        const diff = targetDate.getTime() - Date.now();
+        if (diff <= 0) { clearInterval(countdownInterval); updatePhaseUI(); return; }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000)  / 60000);
+        const s = Math.floor((diff % 60000)    / 1000);
+        document.getElementById('cdDays').textContent  = String(d).padStart(2,'0');
+        document.getElementById('cdHours').textContent = String(h).padStart(2,'0');
+        document.getElementById('cdMins').textContent  = String(m).padStart(2,'0');
+        document.getElementById('cdSecs').textContent  = String(s).padStart(2,'0');
+      }
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    function stopCountdown() {
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+    }
+
+    /* ============================================================
+       PROGRESS BAR
+    ============================================================ */
+    function updateProgress(minted) {
+      mintedCount = minted;
+      const pct = Math.min((minted / TOTAL_SUPPLY) * 100, 100);
+      document.getElementById('mintedCount').textContent  = minted;
+      document.getElementById('progressBar').style.width  = pct + '%';
+      document.getElementById('progressPercent').textContent = pct.toFixed(1) + '% minted';
+    }
+
+    /* ============================================================
+       NFT IMAGE HELPERS
+    ============================================================ */
+    function makeNftImg(src, cls, fallbackEmoji, fallbackLabel) {
+      const img = document.createElement('img');
+      img.src   = src;
+      if (cls) img.className = cls;
+      img.alt   = fallbackLabel || 'NFT';
+      img.onerror = function() {
+        const ph = document.createElement('div');
+        ph.className = cls === 'nft-tier-img' ? 'rarity-tier-img-placeholder' : 'nft-img-placeholder';
+        ph.innerHTML = `<i class="fa-solid fa-image-portrait"></i><span>${fallbackLabel || 'Loading...'}</span>`;
+        img.replaceWith(ph);
+      };
+      return img;
+    }
+
+    function renderTierImages() {
+      // Main preview
+      renderMainPreview('common');
+      updateTierPriceAndPerks('common');
+
+      // Tier thumbs
+      const tiers = [
+        { id:'tierCommonImgWrap',    key:'common',    emoji:'🗝️' },
+        { id:'tierRareImgWrap',      key:'rare',      emoji:'💎' },
+        { id:'tierEpicImgWrap',      key:'epic',      emoji:'⚡' },
+        { id:'tierLegendaryImgWrap', key:'legendary', emoji:'👑' },
+      ];
+      tiers.forEach(t => {
+        const wrap = document.getElementById(t.id);
+        const img  = makeNftImg(NFT_IMAGES[t.key], 'rarity-tier-img', t.emoji, t.key);
+        wrap.appendChild(img);
+      });
+    }
+
+    function renderMainPreview(rarity) {
+      const container = document.getElementById('mainNftImgContainer');
+      container.innerHTML = '';
+      const cfg   = RARITY_CONFIG[rarity];
+      const img   = makeNftImg(NFT_IMAGES[rarity], null, cfg.emoji, cfg.label);
+      img.style.width  = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      container.appendChild(img);
+
+      // Rarity overlay
+      const overlay  = document.createElement('div');
+      overlay.className = 'nft-rarity-overlay rarity-' + rarity;
+      overlay.textContent = cfg.label + ' · ' + cfg.multiplier;
+      container.appendChild(overlay);
+
+      document.getElementById('mainNftName').textContent =
+        'AIACCESS Genesis Pass — ' + cfg.label;
+    }
+
+    function updateTierPriceAndPerks(rarity) {
+      const cfg = RARITY_CONFIG[rarity];
+      const phase = getPhase();
+
+      // Update supply trait
+      const traitSupply = document.getElementById('traitSupply');
+      if (traitSupply) traitSupply.textContent = cfg.supply;
+
+      // Update price display
+      document.getElementById('priceValue').textContent       = phase === 'public' ? cfg.publicPrice : cfg.wlPrice;
+      document.getElementById('publicPriceValue').textContent = cfg.publicPrice;
+      document.getElementById('pricePhaseLabel').textContent  = phase === 'public' ? 'Public Price' : 'WL Price';
+
+      // Update mint button labels
+      const wlLabel  = document.getElementById('mintWlBtnLabel');
+      const pubLabel = document.getElementById('mintPublicBtnLabel');
+      if (wlLabel)  wlLabel.textContent  = `Mint Whitelist — ${cfg.wlPrice} SOL`;
+      if (pubLabel) pubLabel.textContent = `Mint Public — ${cfg.publicPrice} SOL`;
+
+      // Update perks list
+      const perksList = document.getElementById('tierPerksList');
+      if (perksList) perksList.innerHTML = cfg.perks.map(p =>
+        `<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--white);">
+          <i class="fa-solid fa-check" style="color:${cfg.color};font-size:0.6rem;flex-shrink:0;"></i>
+          ${p}
+        </div>`
+      ).join('');
+    }
+
+    function previewRarity(rarity) {
+      currentPreview = rarity;
+      renderMainPreview(rarity);
+      updateTierPriceAndPerks(rarity);
+      // Update active tier card
+      ['common','rare','epic','legendary'].forEach(r => {
+        const el = document.getElementById('tier' + r.charAt(0).toUpperCase() + r.slice(1));
+        el.className = 'rarity-tier-card';
+        if (r === rarity) {
+          if (r === 'common')         el.classList.add('active');
+          else if (r === 'rare')      el.classList.add('active-rare');
+          else if (r === 'epic')      el.classList.add('active-epic');
+          else                        el.classList.add('active-legendary');
+        }
+      });
+    }
+
+    /* ============================================================
+       WHITELIST CHECK
+    ============================================================ */
+    function isWhitelisted(address) {
+      return WL_ADDRESSES.includes(address);
+    }
+
+    /* ============================================================
+       WALLET CONNECTION
+    ============================================================ */
+    function toggleWalletOptions() {
+      if (connectedWallet) { disconnectWallet(); return; }
+      const opts = document.getElementById('walletOptions');
+      opts.classList.toggle('show');
+    }
+
+    /* ============================================================
+       MOBILE DETECTION
+    ============================================================ */
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    }
+
+    function isInAppBrowser() {
+      const ua = navigator.userAgent;
+      return /Phantom|SolflareWallet|Backpack/i.test(ua);
+    }
+
+    /* ============================================================
+       DEEP LINK REDIRECT (mobile, no extension)
+    ============================================================ */
+    function redirectToMobileWallet(provider) {
+      const pageUrl   = encodeURIComponent(window.location.href);
+      const pageUrlRaw = window.location.href;
+
+      const deepLinks = {
+        phantom  : `https://phantom.app/ul/browse/${pageUrl}?ref=${pageUrl}`,
+        solflare : `https://solflare.com/ul/v1/browse/${pageUrl}?ref=${pageUrl}`,
+        backpack : `https://backpack.app/browse/${pageUrlRaw}`
+      };
+
+      const appStoreLinks = {
+        phantom  : { ios: 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977', android: 'https://play.google.com/store/apps/details?id=app.phantom' },
+        solflare : { ios: 'https://apps.apple.com/app/solflare-wallet/id1580902717',       android: 'https://play.google.com/store/apps/details?id=com.solflare.mobile' },
+        backpack : { ios: 'https://apps.apple.com/app/backpack-crypto-wallet/id6445964551', android: 'https://play.google.com/store/apps/details?id=app.backpack' }
+      };
+
+      const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+      // Try deep link first — if app is installed it opens directly
+      showToast(`Opening ${label}…`, 'info');
+      window.location.href = deepLinks[provider];
+
+      // Fallback: if user is still here after 2s, offer app store
+      setTimeout(() => {
+        const isIos     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const storeUrl  = isIos ? appStoreLinks[provider].ios : appStoreLinks[provider].android;
+        const storeName = isIos ? 'App Store' : 'Play Store';
+        const go = confirm(`${label} app not detected.\n\nOpen the ${storeName} to install it?`);
+        if (go) window.open(storeUrl, '_blank');
+        resetConnectBtn();
+      }, 2000);
+    }
+
+    async function connectWallet(provider) {
+      document.getElementById('walletOptions').classList.remove('show');
+
+      const providerMap = {
+        phantom  : () => window.solana     || (window.solana?.isPhantom  ? window.solana  : null),
+        solflare : () => window.solflare,
+        backpack : () => window.backpack   || window.xnft?.solana
+      };
+
+      const p = providerMap[provider]?.();
+
+      // ── Mobile: no extension detected → deep link ──
+      if (!p && isMobile()) {
+        redirectToMobileWallet(provider);
+        return;
+      }
+
+      // ── Desktop: extension not installed ──
+      if (!p) {
+        const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+        showToast(`${label} not detected. Please install the browser extension.`, 'error');
+        return;
+      }
+
+      try {
+        const connectBtn = document.getElementById('connectBtn');
+        connectBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+        connectBtn.disabled  = true;
+
+        let resp;
+        if (provider === 'phantom' || provider === 'backpack') {
+          resp = await p.connect();
+          connectedWallet = resp.publicKey.toString();
+          window._connectedProvider = p;
+        } else if (provider === 'solflare') {
+          await p.connect();
+          connectedWallet = p.publicKey.toString();
+          window._connectedProvider = p;
+        }
+
+        onWalletConnected(connectedWallet);
+      } catch(e) {
+        showToast('Connection rejected.', 'error');
+        resetConnectBtn();
+      }
+    }
+
+    function onWalletConnected(address) {
+      isWLVerified = isWhitelisted(address);
+      const short  = address.slice(0,4) + '...' + address.slice(-4);
+
+      // Update wallet status
+      const status = document.getElementById('walletStatus');
+      status.className = 'wallet-status ' + (isWLVerified ? 'wl-verified' : 'connected');
+      status.innerHTML = `
+        <i class="fa-solid fa-${isWLVerified ? 'shield-check' : 'circle-check'}"></i>
+        <span class="wallet-addr">${short}</span>
+        ${isWLVerified ? '<span style="font-size:0.7rem;margin-left:0.25rem;">✓ WL Verified</span>' : ''}
+        <button class="btn-disconnect" onclick="disconnectWallet()">Disconnect</button>
+      `;
+
+      // Update connect button
+      const btn = document.getElementById('connectBtn');
+      btn.style.display = 'none';
+
+      if (isWLVerified && getPhase() === 'wl') {
+        showToast('✓ Wallet verified — WL mint unlocked!', 'success');
+      } else if (!isWLVerified && getPhase() === 'wl') {
+        showToast('Wallet not on WL. Wait for public phase (May 15).', 'info');
+      } else {
+        showToast('Wallet connected!', 'success');
+      }
+
+      updateMintButtons();
+    }
+
+    function disconnectWallet() {
+      connectedWallet = null;
+      isWLVerified    = false;
+      window._connectedProvider = null;
+      const status    = document.getElementById('walletStatus');
+      status.className= 'wallet-status not-connected';
+      status.innerHTML= '<i class="fa-solid fa-wallet"></i><span id="walletStatusText">No wallet connected</span>';
+      resetConnectBtn();
+      updateMintButtons();
+      showToast('Wallet disconnected.', 'info');
+    }
+
+    function resetConnectBtn() {
+      const btn   = document.getElementById('connectBtn');
+      btn.style.display = '';
+      btn.disabled      = false;
+      btn.innerHTML     = '<i class="fa-solid fa-link"></i> Connect Wallet';
+    }
+
+    /* ============================================================
+       MINT BUTTONS LOGIC
+    ============================================================ */
+    function updateMintButtons() {
+      const phase     = getPhase();
+      const wlBtn     = document.getElementById('mintWlBtn');
+      const pubBtn    = document.getElementById('mintPublicBtn');
+      const soldBtn   = document.getElementById('soldOutBtn');
+
+      wlBtn.style.display   = 'none';
+      pubBtn.style.display  = 'none';
+      soldBtn.style.display = 'none';
+
+      if (!connectedWallet) return;
+
+      if (phase === 'soldout') {
+        soldBtn.style.display = '';
+        return;
+      }
+      if (phase === 'wl' && isWLVerified) {
+        wlBtn.style.display = '';
+        return;
+      }
+      if (phase === 'public') {
+        pubBtn.style.display = '';
+        return;
+      }
+      if (phase === 'waiting') {
+        // Show disabled WL button as preview
+        wlBtn.style.display  = '';
+        wlBtn.disabled       = true;
+        wlBtn.innerHTML      = '<i class="fa-solid fa-clock"></i> WL Mint Opens May 14';
+        return;
+      }
+      // WL phase but not whitelisted
+      if (phase === 'wl' && !isWLVerified) {
+        pubBtn.style.display = '';
+        pubBtn.disabled      = true;
+        pubBtn.innerHTML     = '<i class="fa-solid fa-lock"></i> Not Whitelisted — Wait for Public';
+        return;
+      }
+    }
+
+    /* ============================================================
+       MINT EXECUTION (Candy Machine integration stub)
+       Replace the inner logic with Metaplex SDK calls on mainnet
+    ============================================================ */
+    async function mintNFT(type) {
+      if (!connectedWallet) { showToast('Please connect your wallet first.', 'error'); return; }
+
+      const btn = type === 'wl' ? document.getElementById('mintWlBtn') : document.getElementById('mintPublicBtn');
+      const origHTML = btn.innerHTML;
+      btn.disabled  = true;
+      btn.innerHTML = '<span class="spinner"></span> Minting on Solana...';
+
+      try {
+        // ── REAL METAPLEX CANDY MACHINE MINT ──
+        const connection = new solanaWeb3.Connection(
+          'https://api.mainnet-beta.solana.com', 'confirmed'
+        );
+
+        // Detect which provider is connected
+        const providerObj = window._connectedProvider || window.solana;
+
+        const walletAdapter = {
+          publicKey       : new solanaWeb3.PublicKey(connectedWallet),
+          signTransaction : (tx) => providerObj.signTransaction(tx),
+          signAllTransactions: (txs) => providerObj.signAllTransactions(txs),
+        };
+
+        const mx = MetaplexFoundation.Metaplex
+          .make(connection)
+          .use(MetaplexFoundation.walletAdapterIdentity(walletAdapter));
+
+        const cmAddress = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
+        const candyMachine = await mx.candyMachines().findByAddress({ address: cmAddress });
+
+        // Use WL guard group if in WL phase and wallet is whitelisted
+        const mintConfig = {
+          candyMachine,
+          collectionUpdateAuthority: candyMachine.authorityAddress,
+        };
+        if (type === 'wl') {
+          mintConfig.guards = { allowList: { merkleRoot: candyMachine.candyGuard?.guards?.allowList?.merkleRoot } };
+        }
+
+        const { nft } = await mx.candyMachines().mint(mintConfig);
+
+        const mintAddr = nft.address.toString();
+
+        // Determine rarity from NFT attributes if available
+        const attrs = nft.json?.attributes || [];
+        const rarityAttr = attrs.find(a => a.trait_type?.toLowerCase() === 'rarity');
+        let rarity = 'common';
+        if (rarityAttr) {
+          const rv = rarityAttr.value?.toLowerCase();
+          if (rv === 'legendary')                   rarity = 'legendary';
+          else if (rv === 'epic')                   rarity = 'epic';
+          else if (rv === 'rare' || rv === 'uncommon') rarity = 'rare';
+        } else {
+          // Fallback: derive from token index
+          // Common: #1–300, Rare: #301–425, Epic: #426–475, Legendary: #476–500
+          const name = nft.name || '';
+          const num  = parseInt(name.replace(/\D/g,'')) || 0;
+          rarity = num >= 476 ? 'legendary' : num >= 426 ? 'epic' : num >= 301 ? 'rare' : 'common';
+        }
+
+        // Refresh live progress from chain
+        const updated = await mx.candyMachines().findByAddress({ address: cmAddress });
+        updateProgress(updated.itemsMinted.toNumber());
+
+        showMintSuccess(rarity, mintAddr);
+
+      } catch(e) {
+        showToast('Mint failed: ' + (e.message || 'Unknown error'), 'error');
+        btn.disabled  = false;
+        btn.innerHTML = origHTML;
+      }
+    }
+
+    /* ============================================================
+       SUCCESS MODAL
+    ============================================================ */
+    function showMintSuccess(rarity, nftAddress) {
+      const cfg = RARITY_CONFIG[rarity];
+
+      // Image
+      const imgWrap = document.getElementById('modalImgWrap');
+      imgWrap.innerHTML = '';
+      const img = document.createElement('img');
+      img.src   = NFT_IMAGES[rarity];
+      img.className = 'modal-nft-img';
+      img.alt   = cfg.label;
+      img.onerror = () => {
+        const ph = document.createElement('div');
+        ph.className = 'modal-nft-img-placeholder';
+        ph.textContent = cfg.emoji;
+        img.replaceWith(ph);
+      };
+      imgWrap.appendChild(img);
+
+      // Rarity badge
+      const badge = document.getElementById('modalRarityBadge');
+      badge.style.background = cfg.bg;
+      badge.style.color      = cfg.color;
+      badge.style.border     = '1px solid ' + cfg.border;
+      badge.innerHTML        = cfg.emoji + ' ' + cfg.label;
+
+      // Stats
+      document.getElementById('modalRarity').textContent     = cfg.label;
+      document.getElementById('modalMultiplier').textContent = cfg.multiplier;
+      document.getElementById('modalEmoji').textContent      = rarity === 'legendary' ? '👑' : rarity === 'epic' ? '🔥' : rarity === 'rare' ? '💎' : '🎉';
+
+      // Subtitle
+      document.getElementById('modalSubtitle').textContent =
+        'AIACCESS Genesis Pass — ' + cfg.label;
+
+      // Links
+      document.getElementById('solscanBtn').href =
+        'https://solscan.io/token/' + nftAddress;
+      document.getElementById('twitterShareBtn').href =
+        `https://twitter.com/intent/tweet?text=Just minted AIACCESS Genesis Pass — ${cfg.label.toUpperCase()}! ${cfg.emoji} ${cfg.multiplier} allocation multiplier on @aikin_access AI Launchpad on Solana! 🚀 %23AIAccess %23Solana %23NFT`;
+
+      document.getElementById('mintModal').classList.add('show');
+      updatePhaseUI();
+    }
+
+    function closeModal() {
+      document.getElementById('mintModal').classList.remove('show');
+      const wlBtn = document.getElementById('mintWlBtn');
+      const pbBtn = document.getElementById('mintPublicBtn');
+      wlBtn.disabled  = false; pbBtn.disabled  = false;
+      const cfg = RARITY_CONFIG[currentPreview];
+      wlBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — ${cfg.wlPrice} SOL</span>`;
+      pbBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — ${cfg.publicPrice} SOL</span>`;
+    }
+
+    /* ============================================================
+       TOAST
+    ============================================================ */
+    let toastTimeout;
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      clearTimeout(toastTimeout);
+      t.textContent = msg;
+      t.className   = 'toast ' + type + ' show';
+      toastTimeout  = setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    /* ============================================================
+       INIT
+    ============================================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTierImages();
+      fetchMintProgress();   // Live count from Candy Machine
+      updatePhaseUI();
+
+      // Show mobile wallet hint
+      if (isMobile()) {
+        const hint = document.getElementById('mobileWalletHint');
+        if (hint) hint.style.display = '';
+      }
+
+      // Close modal on overlay click
+      document.getElementById('mintModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+      });
+
+      // Close wallet options on outside click
+      document.addEventListener('click', function(e) {
+        const opts = document.getElementById('walletOptions');
+        const btn  = document.getElementById('connectBtn');
+        if (!opts.contains(e.target) && e.target !== btn) {
+          opts.classList.remove('show');
+        }
+      });
+
+      // Re-check phase every minute
+      setInterval(updatePhaseUI, 60000);
+      // Refresh mint count every 30s
+      setInterval(fetchMintProgress, 30000);
+    });
+
+    /* ============================================================
+       LIVE MINT PROGRESS FROM CHAIN
+    ============================================================ */
+    async function fetchMintProgress() {
+      try {
+        if (typeof solanaWeb3 === 'undefined' || typeof MetaplexFoundation === 'undefined') {
+          updateProgress(0); return;
+        }
+        const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+        const mx = MetaplexFoundation.Metaplex.make(connection);
+        const cm = await mx.candyMachines().findByAddress({
+          address: new solanaWeb3.PublicKey(CANDY_MACHINE_ID)
+        });
+        updateProgress(cm.itemsMinted.toNumber());
+      } catch(e) {
+        console.warn('Could not fetch mint progress:', e.message);
+        updateProgress(mintedCount); // keep current count on error
+      }
+    }
+  </script>
+</body>
+</html>
