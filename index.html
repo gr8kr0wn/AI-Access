@@ -605,11 +605,48 @@
     <!-- CTA BANNER -->
     <section id="whitelist" style="padding: 2rem clamp(1rem,5vw,4rem) 6rem;">
       <div class="cta-banner reveal">
-        <h2>Ready to Get <span class="gradient-text">Early Access?</span></h2>
-        <p>Join the whitelist now and secure your spot in the AIAccess Genesis Pass mint.</p>
+        <h2>The Genesis Pass Mint is <span class="gradient-text">Almost Here</span></h2>
+
+        <!-- Mint date info -->
+        <div style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-bottom:1.5rem;position:relative;">
+          <div style="background:rgba(123,47,255,0.12);border:1px solid rgba(123,47,255,0.35);border-radius:12px;padding:0.75rem 1.5rem;text-align:center;">
+            <div style="font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Waitlist Holders</div>
+            <div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:#a78bfa;">May 14 — Early Mint</div>
+          </div>
+          <div style="background:rgba(0,194,255,0.08);border:1px solid rgba(0,194,255,0.3);border-radius:12px;padding:0.75rem 1.5rem;text-align:center;">
+            <div style="font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Public Mint</div>
+            <div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:var(--cyan);">May 15 — Open to All</div>
+          </div>
+        </div>
+
+        <p style="position:relative;">Waitlist is closed. Get ready — the Genesis Pass mint drops in:</p>
+
+        <!-- Countdown Timer -->
+        <div id="mint-countdown" style="display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap;margin-bottom:2rem;position:relative;">
+          <div class="countdown-block">
+            <div class="countdown-val" id="cd-days">00</div>
+            <div class="countdown-label">Days</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-block">
+            <div class="countdown-val" id="cd-hours">00</div>
+            <div class="countdown-label">Hours</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-block">
+            <div class="countdown-val" id="cd-mins">00</div>
+            <div class="countdown-label">Mins</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-block">
+            <div class="countdown-val" id="cd-secs">00</div>
+            <div class="countdown-label">Secs</div>
+          </div>
+        </div>
+
         <div class="btn-group">
-          <a href="genesis-nft.html" class="btn-primary">
-            <i class="fa-solid fa-gem"></i> View Genesis NFT
+          <a href="mint.html" class="btn-primary">
+            <i class="fa-solid fa-gem"></i> Go to Mint Page
           </a>
           <a href="https://x.com/aikin_access" target="_blank" class="btn-outline">
             <i class="fa-brands fa-x-twitter"></i> Follow on X
@@ -617,6 +654,71 @@
         </div>
       </div>
     </section>
+
+    <style>
+      .countdown-block {
+        text-align: center;
+        background: rgba(10,15,30,0.6);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.9rem 1.4rem;
+        min-width: 72px;
+      }
+      .countdown-val {
+        font-family: var(--font-display);
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        font-weight: 900;
+        background: var(--grad-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+      }
+      .countdown-label {
+        font-family: var(--font-display);
+        font-size: 0.55rem;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-top: 0.4rem;
+      }
+      .countdown-sep {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--muted);
+        align-self: center;
+        margin-bottom: 1rem;
+      }
+    </style>
+
+    <script>
+      (function() {
+        // Target: May 15, 2026 00:00:00 UTC
+        var target = new Date('2026-05-14T00:00:00Z').getTime();
+        function updateCountdown() {
+          var now = Date.now();
+          var diff = target - now;
+          if (diff <= 0) {
+            document.getElementById('cd-days').textContent = '00';
+            document.getElementById('cd-hours').textContent = '00';
+            document.getElementById('cd-mins').textContent = '00';
+            document.getElementById('cd-secs').textContent = '00';
+            return;
+          }
+          var days  = Math.floor(diff / 86400000);
+          var hours = Math.floor((diff % 86400000) / 3600000);
+          var mins  = Math.floor((diff % 3600000) / 60000);
+          var secs  = Math.floor((diff % 60000) / 1000);
+          document.getElementById('cd-days').textContent  = String(days).padStart(2,'0');
+          document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+          document.getElementById('cd-mins').textContent  = String(mins).padStart(2,'0');
+          document.getElementById('cd-secs').textContent  = String(secs).padStart(2,'0');
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      })();
+    </script>
   </main>
 
   <!-- FOOTER -->
