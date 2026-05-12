@@ -942,6 +942,21 @@
   </style>
 </head>
 <body>
+  <!-- PROTOCOL WARNING: Phantom only injects on https:// or localhost -->
+  <script>
+    (function() {
+      const proto = window.location.protocol;
+      const host  = window.location.hostname;
+      const isOk  = proto === 'https:' || host === 'localhost' || host === '127.0.0.1';
+      if (!isOk) {
+        const bar = document.createElement('div');
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff2f2f;color:#fff;text-align:center;padding:0.7rem 1rem;font-family:monospace;font-size:0.85rem;font-weight:700;';
+        bar.innerHTML = '⚠️ Wallet extensions (Phantom, Solflare) only work on <strong>https://</strong> or <strong>localhost</strong>. This page is on <strong>' + proto + '</strong> — wallets will not connect.';
+        document.body.prepend(bar);
+      }
+    })();
+  </script>
+
   <canvas id="bg-canvas"></canvas>
   <div class="noise-overlay"></div>
   <div class="cursor-dot"></div>
@@ -989,6 +1004,21 @@
         <p class="section-subtitle reveal delay-2" style="margin:0 auto;text-align:center;">
           500 Genesis Passes. Two phases. One entry point into the AI agent economy on Solana.
         </p>
+        <!-- Collection Stats -->
+        <div class="reveal delay-3" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.75rem;">
+          <div style="display:inline-flex;align-items:center;gap:0.6rem;padding:0.5rem 1.4rem;border-radius:100px;background:rgba(123,47,255,0.12);border:1px solid rgba(123,47,255,0.35);">
+            <i class="fa-solid fa-layer-group" style="color:var(--purple);font-size:0.75rem;"></i>
+            <span style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--white);">500 Total NFTs</span>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:0.6rem;padding:0.5rem 1.4rem;border-radius:100px;background:rgba(0,194,255,0.1);border:1px solid rgba(0,194,255,0.35);">
+            <i class="fa-solid fa-shield-check" style="color:var(--cyan);font-size:0.75rem;"></i>
+            <span style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--white);">86 WL Spots</span>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:0.6rem;padding:0.5rem 1.4rem;border-radius:100px;background:rgba(255,47,190,0.08);border:1px solid rgba(255,47,190,0.3);">
+            <i class="fa-solid fa-calendar-days" style="color:var(--pink);font-size:0.75rem;"></i>
+            <span style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--white);">May 14 WL · May 15 Public</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1081,7 +1111,10 @@
             <div class="progress-bar-wrap">
               <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
             </div>
-            <div class="progress-percent" id="progressPercent">0% minted</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;">
+              <div class="progress-percent" id="progressPercent" style="margin-top:0;text-align:left;">0% minted</div>
+              <div id="progressMilestone" style="font-family:var(--font-display);font-size:0.55rem;color:var(--purple);letter-spacing:0.08em;text-align:right;"></div>
+            </div>
           </div>
 
           <!-- Mint Box -->
@@ -1092,14 +1125,14 @@
               <div style="display:flex;flex-direction:column;gap:0.3rem;">
                 <span class="mint-price-label" id="pricePhaseLabel">WL Price</span>
                 <span>
-                  <span class="mint-price-value" id="priceValue">0.2</span>
+                  <span class="mint-price-value" id="priceValue">0.05</span>
                   <span class="mint-price-sol">SOL</span>
                 </span>
               </div>
               <div style="display:flex;flex-direction:column;gap:0.3rem;text-align:right;">
                 <span class="mint-price-label">Public Price</span>
                 <span>
-                  <span class="mint-price-value" id="publicPriceValue" style="font-size:1rem;opacity:0.6;">0.4</span>
+                  <span class="mint-price-value" id="publicPriceValue" style="font-size:1rem;opacity:0.6;">0.1</span>
                   <span class="mint-price-sol">SOL</span>
                 </span>
               </div>
@@ -1149,12 +1182,12 @@
             <!-- Mint Buttons (hidden until connected) -->
             <button class="btn-mint btn-mint-wl" id="mintWlBtn" style="display:none;" onclick="mintNFT('wl')">
               <span class="btn-shimmer"></span>
-              <i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — 0.2 SOL</span>
+              <i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — 0.05 SOL</span>
             </button>
 
             <button class="btn-mint btn-mint-public" id="mintPublicBtn" style="display:none;" onclick="mintNFT('public')">
               <span class="btn-shimmer"></span>
-              <i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — 0.4 SOL</span>
+              <i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — 0.1 SOL</span>
             </button>
 
             <button class="btn-mint btn-mint-soldout" id="soldOutBtn" style="display:none;" disabled>
@@ -1177,12 +1210,12 @@
         <div class="glass-card mint-info-card tilt-card reveal delay-1">
           <span class="mint-info-icon">🎯</span>
           <h4>Whitelist Phase</h4>
-          <p>Starts May 14, 2026. WL holders get 50% off — Common 0.2 SOL, Rare 0.4 SOL, Epic 1 SOL, Legendary 2 SOL. 24-hour exclusive window before public opens.</p>
+          <p>May 14, 2026 · 86 spots reserved for early believers. WL mint is flat <strong style="color:var(--purple);">0.05 SOL</strong> regardless of rarity. Your rarity determines your allocation multiplier — not your cost. 24-hour exclusive window before the world gets in.</p>
         </div>
         <div class="glass-card mint-info-card tilt-card reveal delay-2">
           <span class="mint-info-icon">🌐</span>
           <h4>Public Phase</h4>
-          <p>Starts May 15, 2026. Open to all — Common 0.4 SOL, Rare 0.8 SOL, Epic 2 SOL, Legendary 4 SOL. First come, first served until all 500 passes are minted.</p>
+          <p>May 15, 2026 · Open to everyone. Public mint is flat <strong style="color:var(--cyan);">0.1 SOL</strong> for all rarities. First come, first served — once all 500 Genesis Passes are minted, the door closes forever.</p>
         </div>
         <div class="glass-card mint-info-card tilt-card reveal delay-3">
           <span class="mint-info-icon">⚡</span>
@@ -1272,25 +1305,25 @@
       common    : {
         label:'Common',    emoji:'🗝️', multiplier:'1x',  color:'#ccc',
         bg:'rgba(150,150,150,0.15)', border:'rgba(255,255,255,0.2)',
-        wlPrice:0.2, publicPrice:0.4, supply:300,
+        wlPrice:0.05, publicPrice:0.1, supply:300,
         perks:['1x Presale Allocation','$ACCESS Staking','Governance Voting']
       },
       rare      : {
         label:'Rare',      emoji:'💎', multiplier:'2x',  color:'var(--cyan)',
         bg:'rgba(0,194,255,0.15)',   border:'rgba(0,194,255,0.4)',
-        wlPrice:0.4, publicPrice:0.8, supply:125,
+        wlPrice:0.05, publicPrice:0.1, supply:125,
         perks:['2x Presale Allocation','Early Project Access','$ACCESS Staking','Governance Voting']
       },
       epic      : {
         label:'Epic',      emoji:'⚡', multiplier:'5x',  color:'var(--pink)',
         bg:'rgba(255,47,190,0.15)',  border:'rgba(255,47,190,0.4)',
-        wlPrice:1, publicPrice:2, supply:50,
+        wlPrice:0.05, publicPrice:0.1, supply:50,
         perks:['5x Presale Allocation','Private Alpha Chat','Early Project Access','Enhanced Staking APY']
       },
       legendary : {
         label:'Legendary', emoji:'👑', multiplier:'10x', color:'#FFD700',
         bg:'rgba(255,215,0,0.15)',   border:'rgba(255,215,0,0.4)',
-        wlPrice:2, publicPrice:4, supply:25,
+        wlPrice:0.05, publicPrice:0.1, supply:25,
         perks:['10x Presale Allocation','Revenue Share','Private Alpha Chat','Max Staking APY']
       }
     };
@@ -1438,6 +1471,21 @@
       document.getElementById('mintedCount').textContent  = minted;
       document.getElementById('progressBar').style.width  = pct + '%';
       document.getElementById('progressPercent').textContent = pct.toFixed(1) + '% minted';
+
+      // Milestone captions
+      const ms = document.getElementById('progressMilestone');
+      if (ms) {
+        let caption = '';
+        if (minted === 0)           caption = '⏳ Awaiting the first genesis holder';
+        else if (minted < 86)       caption = '🔐 WL founders securing their spot';
+        else if (minted === 86)     caption = '✅ All 86 WL founders locked in';
+        else if (minted < 250)      caption = '🚀 Public phase heating up';
+        else if (minted < 400)      caption = '🔥 Over halfway — momentum is real';
+        else if (minted < 475)      caption = '⚡ Final stretch — don\'t sleep';
+        else if (minted < 500)      caption = '🚨 Almost gone — last few remain';
+        else                        caption = '👑 Sold out — genesis is complete';
+        ms.textContent = caption;
+      }
     }
 
     /* ============================================================
@@ -1567,7 +1615,8 @@
 
     function isInAppBrowser() {
       const ua = navigator.userAgent;
-      return /Phantom|SolflareWallet|Backpack/i.test(ua);
+      // Fix #7: Solflare reports as 'SolflareApp' on some versions, not 'SolflareWallet'
+      return /Phantom|SolflareWallet|SolflareApp|Backpack/i.test(ua);
     }
 
     /* ============================================================
@@ -1578,7 +1627,8 @@
       const pageUrlRaw = window.location.href;
 
       const deepLinks = {
-        phantom  : `https://phantom.app/ul/browse/${pageUrl}?ref=${pageUrl}`,
+        // Fix #5: Phantom deep link must use /v1/ — old format no longer works
+        phantom  : `https://phantom.app/ul/v1/browse/${pageUrl}?ref=${pageUrl}`,
         solflare : `https://solflare.com/ul/v1/browse/${pageUrl}?ref=${pageUrl}`,
         backpack : `https://backpack.app/browse/${pageUrlRaw}`
       };
@@ -1606,46 +1656,112 @@
       }, 2000);
     }
 
+    /* ============================================================
+       PROVIDER HELPERS
+    ============================================================ */
+    /* Official Phantom detection per docs.phantom.com
+       Extensions inject AFTER DOMContentLoaded on Windows/slower machines,
+       so we poll up to 3 seconds before giving up. */
+    async function getPhantomProvider() {
+      if ('phantom' in window && window.phantom?.solana?.isPhantom)
+        return window.phantom.solana;
+      if (window.solana?.isPhantom)
+        return window.solana;
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 100));
+        if ('phantom' in window && window.phantom?.solana?.isPhantom)
+          return window.phantom.solana;
+        if (window.solana?.isPhantom)
+          return window.solana;
+      }
+      return null;
+    }
+
+    async function getSolflareProvider() {
+      if (window.solflare?.isSolflare) return window.solflare;
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 100));
+        if (window.solflare?.isSolflare) return window.solflare;
+      }
+      return null;
+    }
+
+    function getBackpackProvider() {
+      return window.backpack || window.xnft?.solana || null;
+    }
+
+    /* Fix #8: Attach wallet event listeners so the page stays in sync
+       if the user switches accounts or disconnects from inside the wallet */
+    function attachWalletListeners(provider) {
+      // Remove any previously attached listeners first
+      if (window._walletAccountChangedHandler) {
+        try { provider.off('accountChanged', window._walletAccountChangedHandler); } catch(_) {}
+        try { provider.off('disconnect',      window._walletDisconnectHandler);    } catch(_) {}
+      }
+
+      window._walletAccountChangedHandler = (pubKey) => {
+        if (pubKey) {
+          connectedWallet = pubKey.toString();
+          onWalletConnected(connectedWallet);
+        } else {
+          disconnectWallet();
+        }
+      };
+      window._walletDisconnectHandler = () => { disconnectWallet(); };
+
+      try { provider.on('accountChanged', window._walletAccountChangedHandler); } catch(_) {}
+      try { provider.on('disconnect',      window._walletDisconnectHandler);    } catch(_) {}
+    }
+
     async function connectWallet(provider) {
       document.getElementById('walletOptions').classList.remove('show');
 
-      const providerMap = {
-        phantom  : () => window.solana     || (window.solana?.isPhantom  ? window.solana  : null),
-        solflare : () => window.solflare,
-        backpack : () => window.backpack   || window.xnft?.solana
-      };
+      // Show detecting spinner immediately — polling can take up to 3s on Windows
+      const connectBtn = document.getElementById('connectBtn');
+      connectBtn.innerHTML = '<span class="spinner"></span> Detecting wallet...';
+      connectBtn.disabled  = true;
 
-      const p = providerMap[provider]?.();
+      let p = null;
+
+      if (provider === 'phantom') {
+        p = await getPhantomProvider();
+      } else if (provider === 'solflare') {
+        p = await getSolflareProvider();
+      } else if (provider === 'backpack') {
+        p = getBackpackProvider();
+      }
 
       // ── Mobile: no extension detected → deep link ──
       if (!p && isMobile()) {
+        resetConnectBtn();
         redirectToMobileWallet(provider);
         return;
       }
 
-      // ── Desktop: extension not installed ──
+      // ── Desktop: extension not found after full polling window ──
       if (!p) {
         const label = provider.charAt(0).toUpperCase() + provider.slice(1);
-        showToast(`${label} not detected. Please install the browser extension.`, 'error');
+        showToast(`${label} not detected. Make sure it is installed and enabled, then try again.`, 'error');
+        resetConnectBtn();
         return;
       }
 
       try {
-        const connectBtn = document.getElementById('connectBtn');
         connectBtn.innerHTML = '<span class="spinner"></span> Connecting...';
-        connectBtn.disabled  = true;
 
-        let resp;
+        let pubKey;
         if (provider === 'phantom' || provider === 'backpack') {
-          resp = await p.connect();
-          connectedWallet = resp.publicKey.toString();
-          window._connectedProvider = p;
+          const resp = await p.connect();
+          pubKey = resp.publicKey.toString();
         } else if (provider === 'solflare') {
           await p.connect();
-          connectedWallet = p.publicKey.toString();
-          window._connectedProvider = p;
+          pubKey = p.publicKey.toString();
         }
 
+        window._connectedProvider = p;
+        connectedWallet = pubKey;
+
+        attachWalletListeners(p);
         onWalletConnected(connectedWallet);
       } catch(e) {
         showToast('Connection rejected.', 'error');
@@ -1683,9 +1799,16 @@
     }
 
     function disconnectWallet() {
+      // Fix #9: Clean up provider listeners before nulling state
+      if (window._connectedProvider) {
+        try { window._connectedProvider.off('accountChanged', window._walletAccountChangedHandler); } catch(_) {}
+        try { window._connectedProvider.off('disconnect',      window._walletDisconnectHandler);    } catch(_) {}
+      }
       connectedWallet = null;
       isWLVerified    = false;
-      window._connectedProvider = null;
+      window._connectedProvider           = null;
+      window._walletAccountChangedHandler = null;
+      window._walletDisconnectHandler     = null;
       const status    = document.getElementById('walletStatus');
       status.className= 'wallet-status not-connected';
       status.innerHTML= '<i class="fa-solid fa-wallet"></i><span id="walletStatusText">No wallet connected</span>';
@@ -1874,8 +1997,8 @@
       const pbBtn = document.getElementById('mintPublicBtn');
       wlBtn.disabled  = false; pbBtn.disabled  = false;
       const cfg = RARITY_CONFIG[currentPreview];
-      wlBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — ${cfg.wlPrice} SOL</span>`;
-      pbBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — ${cfg.publicPrice} SOL</span>`;
+      wlBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-sparkles"></i> <span id="mintWlBtnLabel">Mint Whitelist — 0.05 SOL</span>`;
+      pbBtn.innerHTML = `<span class="btn-shimmer"></span><i class="fa-solid fa-bolt"></i> <span id="mintPublicBtnLabel">Mint Public — 0.1 SOL</span>`;
     }
 
     /* ============================================================
@@ -1891,12 +2014,63 @@
     }
 
     /* ============================================================
+       SILENT RECONNECT (Fix #2)
+       If the user previously approved this site, reconnect silently
+       without showing the wallet picker again.
+    ============================================================ */
+    async function trySilentReconnect() {
+      // Phantom
+      const phantom = getPhantomProvider();
+      if (phantom?.isConnected && phantom.publicKey) {
+        window._connectedProvider = phantom;
+        connectedWallet = phantom.publicKey.toString();
+        attachWalletListeners(phantom);
+        onWalletConnected(connectedWallet);
+        return;
+      }
+      if (phantom) {
+        try {
+          const resp = await phantom.connect({ onlyIfTrusted: true });
+          if (resp?.publicKey) {
+            window._connectedProvider = phantom;
+            connectedWallet = resp.publicKey.toString();
+            attachWalletListeners(phantom);
+            onWalletConnected(connectedWallet);
+            return;
+          }
+        } catch(_) { /* not previously approved — that's fine */ }
+      }
+
+      // Solflare
+      const solflare = window.solflare;
+      if (solflare?.isSolflare && solflare.isConnected && solflare.publicKey) {
+        window._connectedProvider = solflare;
+        connectedWallet = solflare.publicKey.toString();
+        attachWalletListeners(solflare);
+        onWalletConnected(connectedWallet);
+        return;
+      }
+
+      // Backpack
+      const backpack = getBackpackProvider();
+      if (backpack?.isConnected && backpack.publicKey) {
+        window._connectedProvider = backpack;
+        connectedWallet = backpack.publicKey.toString();
+        attachWalletListeners(backpack);
+        onWalletConnected(connectedWallet);
+      }
+    }
+
+    /* ============================================================
        INIT
     ============================================================ */
     document.addEventListener('DOMContentLoaded', () => {
       renderTierImages();
       fetchMintProgress();   // Live count from Candy Machine
       updatePhaseUI();
+
+      // Fix #2: Attempt silent reconnect on page load
+      trySilentReconnect();
 
       // Show mobile wallet hint
       if (isMobile()) {
