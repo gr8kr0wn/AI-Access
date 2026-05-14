@@ -1858,7 +1858,7 @@
         // ── CANDY MACHINE V3 MINT via raw web3.js + RPC ──
         // (No Metaplex SDK needed — works natively in any browser)
         const connection = new solanaWeb3.Connection(
-          'https://api.mainnet-beta.solana.com', 'confirmed'
+          'https://solana-mainnet.g.alchemy.com/v2/FKCaRpw4Ai6S_gUu3UXu5', 'confirmed'
         );
 
         const providerObj = window._connectedProvider || window.solana;
@@ -2108,7 +2108,7 @@
     async function fetchMintProgress() {
       try {
         if (typeof solanaWeb3 === 'undefined') { updateProgress(0); return; }
-        const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+        const connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/FKCaRpw4Ai6S_gUu3UXu5', 'confirmed');
         const cmPubkey   = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
         const info       = await connection.getAccountInfo(cmPubkey);
         if (!info) { updateProgress(0); return; }
