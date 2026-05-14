@@ -10,7 +10,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
   <!-- Metaplex JS SDK (UMD build) -->
   <script src="https://cdn.jsdelivr.net/npm/@metaplex-foundation/js@0.20.1/dist/index.iife.min.js"></script>
-  <script>var MetaplexFoundation = MetaplexJs;</script>
+  <script>
+    // Detect whichever global name the IIFE registered and alias to MetaplexFoundation
+    (function() {
+      var candidates = ['MetaplexFoundation', 'MetaplexJs', 'metaplexFoundation', 'metaplex'];
+      for (var i = 0; i < candidates.length; i++) {
+        if (window[candidates[i]] && window[candidates[i]].Metaplex) {
+          window.MetaplexFoundation = window[candidates[i]];
+          return;
+        }
+      }
+      // Fallback: scan all window keys for an object with a .Metaplex property
+      for (var key in window) {
+        try {
+          if (window[key] && typeof window[key] === 'object' && window[key].Metaplex) {
+            window.MetaplexFoundation = window[key];
+            return;
+          }
+        } catch(e) {}
+      }
+      console.error('MetaplexFoundation could not be detected — SDK may have failed to load.');
+    })();
+  </script>
 
   <style>
     /* ── Page Hero ── */
@@ -1358,7 +1379,7 @@
       "55W73hV5x7spwehdxMUesavMCWvNivYRjmvcgN5jBPBJ","AkZeX3hKyu9FiWk9i5amzAMs4Xnh7BqzpMhZ6jr9TyZg",
       "BFUfbFzum4pzayS6XmdXbxJrRQ1MLRM8xHX4x3aq7mEn","78yQT1tZW1WyNfTGM8Adb46Nvw6dr7EjGDZ3KEAURvtM",
       "FKmc9AC9qTtQRQVuaUEURLX7XVjWKSw6DoY3HhxUVDEg","EJdgmUGXeusbBZ81CUWtVDuJduwwRe9HxcXegJhNHJmy",
-      "J5Q85Mui21nPsYj1ECMZr2h5GqupS5Z8hdkawopHMw6m","tzjUQxKpnjsJ7J2sdNPmZa4UBNgcPNC6h4Nb4hJAMW2"
+      "J5Q85Mui21nPsYj1ECMZr2h5GqupS5Z8hdkawopHMw6m"
     ];
 
     /* ============================================================
