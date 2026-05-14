@@ -6,27 +6,8 @@
   <title>Mint — AIAccess Genesis Pass</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <!-- Solana Web3.js -->
+  <!-- Solana Web3.js (works natively in browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
-  <!-- Metaplex JS SDK via esm.sh (browser-compatible, polyfills Node built-ins) -->
-  <script type="module">
-    import * as MetaplexMod from 'https://esm.sh/@metaplex-foundation/js@0.20.1?bundle&target=es2020';
-    window.MetaplexFoundation = MetaplexMod;
-    window._metaplexReady = true;
-    window.dispatchEvent(new Event('metaplex-ready'));
-  </script>
-  <script>
-    // Ensure MetaplexFoundation is available before mint is called
-    window._metaplexReady = false;
-    window.waitForMetaplex = function() {
-      return new Promise(function(resolve) {
-        if (window._metaplexReady) return resolve();
-        window.addEventListener('metaplex-ready', resolve, { once: true });
-        // Timeout after 15s
-        setTimeout(resolve, 15000);
-      });
-    };
-  </script>
 
   <style>
     /* ── Page Hero ── */
@@ -1874,67 +1855,90 @@
       btn.innerHTML = '<span class="spinner"></span> Minting on Solana...';
 
       try {
-        // Wait for Metaplex SDK to finish loading (esm.sh async import)
-        await window.waitForMetaplex();
-        if (!window.MetaplexFoundation || !window.MetaplexFoundation.Metaplex) {
-          throw new Error('Metaplex SDK failed to load. Please refresh and try again.');
-        }
-
-        // ── REAL METAPLEX CANDY MACHINE MINT ──
+        // ── CANDY MACHINE V3 MINT via raw web3.js + RPC ──
+        // (No Metaplex SDK needed — works natively in any browser)
         const connection = new solanaWeb3.Connection(
           'https://api.mainnet-beta.solana.com', 'confirmed'
         );
 
-        // Detect which provider is connected
         const providerObj = window._connectedProvider || window.solana;
+        const payerKey    = new solanaWeb3.PublicKey(connectedWallet);
 
-        const walletAdapter = {
-          publicKey       : new solanaWeb3.PublicKey(connectedWallet),
-          signTransaction : (tx) => providerObj.signTransaction(tx),
-          signAllTransactions: (txs) => providerObj.signAllTransactions(txs),
-        };
+        // Program IDs
+        const CANDY_MACHINE_PROGRAM = new solanaWeb3.PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR');
+        const TOKEN_METADATA_PROGRAM = new solanaWeb3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+        const SPL_TOKEN_PROGRAM      = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+        const SPL_ASSOC_TOKEN        = new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bz');
+        const SYSVAR_SLOT_HASHES     = new solanaWeb3.PublicKey('SysvarS1otHashes111111111111111111111111111');
+        const SYSVAR_INSTRUCTIONS    = new solanaWeb3.PublicKey('Sysvar1nstructions1111111111111111111111111');
 
-        const mx = MetaplexFoundation.Metaplex
-          .make(connection)
-          .use(MetaplexFoundation.walletAdapterIdentity(walletAdapter));
+        const cmPubkey = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
 
-        const cmAddress = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
-        const candyMachine = await mx.candyMachines().findByAddress({ address: cmAddress });
+        // Fetch candy machine account to get collection mint + authority
+        const cmAccountInfo = await connection.getAccountInfo(cmPubkey);
+        if (!cmAccountInfo) throw new Error('Candy Machine not found on-chain.');
 
-        // Use WL guard group if in WL phase and wallet is whitelisted
-        const mintConfig = {
-          candyMachine,
-          collectionUpdateAuthority: candyMachine.authorityAddress,
-        };
-        if (type === 'wl') {
-          mintConfig.guards = { allowList: { merkleRoot: candyMachine.candyGuard?.guards?.allowList?.merkleRoot } };
-        }
+        // Parse itemsMinted (offset 8 header + fields: authority 32, mint_authority 32, collection_mint 32, items_redeemed 8)
+        const data = cmAccountInfo.data;
+        const collectionMint = new solanaWeb3.PublicKey(data.slice(72, 104));
+        const itemsMinted    = Number(data.readBigUInt64LE(104));
 
-        const { nft } = await mx.candyMachines().mint(mintConfig);
+        // Generate fresh mint keypair
+        const mintKeypair = solanaWeb3.Keypair.generate();
+        const mintKey     = mintKeypair.publicKey;
 
-        const mintAddr = nft.address.toString();
+        // Derive PDAs
+        const [metadataPDA]       = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes()], TOKEN_METADATA_PROGRAM);
+        const [masterEditionPDA]  = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes(), Buffer.from('edition')], TOKEN_METADATA_PROGRAM);
+        const [cmAuthorityPDA]    = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('candy_machine'), cmPubkey.toBytes()], CANDY_MACHINE_PROGRAM);
+        const [collectionMetaPDA] = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes()], TOKEN_METADATA_PROGRAM);
+        const [collectionEdPDA]   = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes(), Buffer.from('edition')], TOKEN_METADATA_PROGRAM);
 
-        // Determine rarity from NFT attributes if available
-        const attrs = nft.json?.attributes || [];
-        const rarityAttr = attrs.find(a => a.trait_type?.toLowerCase() === 'rarity');
-        let rarity = 'common';
-        if (rarityAttr) {
-          const rv = rarityAttr.value?.toLowerCase();
-          if (rv === 'legendary')                   rarity = 'legendary';
-          else if (rv === 'epic')                   rarity = 'epic';
-          else if (rv === 'rare' || rv === 'uncommon') rarity = 'rare';
-        } else {
-          // Fallback: derive from token index
-          // Common: #1–300, Rare: #301–425, Epic: #426–475, Legendary: #476–500
-          const name = nft.name || '';
-          const num  = parseInt(name.replace(/\D/g,'')) || 0;
-          rarity = num >= 476 ? 'legendary' : num >= 426 ? 'epic' : num >= 301 ? 'rare' : 'common';
-        }
+        // Buyer's associated token account for the new mint
+        const [buyerATA] = solanaWeb3.PublicKey.findProgramAddressSync([payerKey.toBytes(), SPL_TOKEN_PROGRAM.toBytes(), mintKey.toBytes()], SPL_ASSOC_TOKEN);
 
-        // Refresh live progress from chain
-        const updated = await mx.candyMachines().findByAddress({ address: cmAddress });
-        updateProgress(updated.itemsMinted.toNumber());
+        // Build mint instruction (discriminator = sha256("global:mint_v2")[0:8])
+        const mintDiscriminator = Buffer.from([120, 121, 23, 146, 173, 110, 199, 205]);
+        const mintIx = new solanaWeb3.TransactionInstruction({
+          programId: CANDY_MACHINE_PROGRAM,
+          keys: [
+            { pubkey: cmPubkey,          isSigner: false, isWritable: true  },
+            { pubkey: cmAuthorityPDA,    isSigner: false, isWritable: true  },
+            { pubkey: payerKey,          isSigner: true,  isWritable: true  },
+            { pubkey: mintKey,           isSigner: true,  isWritable: true  },
+            { pubkey: buyerATA,          isSigner: false, isWritable: true  },
+            { pubkey: metadataPDA,       isSigner: false, isWritable: true  },
+            { pubkey: masterEditionPDA,  isSigner: false, isWritable: true  },
+            { pubkey: collectionMint,    isSigner: false, isWritable: false },
+            { pubkey: collectionMetaPDA, isSigner: false, isWritable: true  },
+            { pubkey: collectionEdPDA,   isSigner: false, isWritable: false },
+            { pubkey: TOKEN_METADATA_PROGRAM,              isSigner: false, isWritable: false },
+            { pubkey: SPL_TOKEN_PROGRAM,                   isSigner: false, isWritable: false },
+            { pubkey: SPL_ASSOC_TOKEN,                     isSigner: false, isWritable: false },
+            { pubkey: solanaWeb3.SystemProgram.programId,  isSigner: false, isWritable: false },
+            { pubkey: SYSVAR_SLOT_HASHES,                  isSigner: false, isWritable: false },
+            { pubkey: SYSVAR_INSTRUCTIONS,                 isSigner: false, isWritable: false },
+          ],
+          data: mintDiscriminator,
+        });
 
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+        const tx = new solanaWeb3.Transaction({ feePayer: payerKey, recentBlockhash: blockhash });
+        tx.add(mintIx);
+        tx.partialSign(mintKeypair);
+
+        // Ask wallet to sign
+        const signedTx  = await providerObj.signTransaction(tx);
+        const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+
+        const mintAddr = mintKey.toString();
+
+        // Derive rarity from token index
+        const num = itemsMinted + 1;
+        let rarity = num >= 476 ? 'legendary' : num >= 426 ? 'epic' : num >= 301 ? 'rare' : 'common';
+
+        updateProgress(num);
         showMintSuccess(rarity, mintAddr);
 
       } catch(e) {
@@ -2103,18 +2107,17 @@
     ============================================================ */
     async function fetchMintProgress() {
       try {
-        if (typeof solanaWeb3 === 'undefined' || !window.MetaplexFoundation || !window.MetaplexFoundation.Metaplex) {
-          updateProgress(0); return;
-        }
+        if (typeof solanaWeb3 === 'undefined') { updateProgress(0); return; }
         const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-        const mx = MetaplexFoundation.Metaplex.make(connection);
-        const cm = await mx.candyMachines().findByAddress({
-          address: new solanaWeb3.PublicKey(CANDY_MACHINE_ID)
-        });
-        updateProgress(cm.itemsMinted.toNumber());
+        const cmPubkey   = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
+        const info       = await connection.getAccountInfo(cmPubkey);
+        if (!info) { updateProgress(0); return; }
+        // items_redeemed is a u64 at byte offset 104 in the CM v3 account layout
+        const itemsMinted = Number(info.data.readBigUInt64LE(104));
+        updateProgress(itemsMinted);
       } catch(e) {
         console.warn('Could not fetch mint progress:', e.message);
-        updateProgress(mintedCount); // keep current count on error
+        updateProgress(mintedCount);
       }
     }
   </script>
