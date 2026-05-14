@@ -1878,10 +1878,11 @@
         const cmAccountInfo = await connection.getAccountInfo(cmPubkey, { encoding: 'base64' });
         if (!cmAccountInfo) throw new Error('Candy Machine not found on-chain.');
 
-        // Parse itemsMinted (offset 8 header + fields: authority 32, mint_authority 32, collection_mint 32, items_redeemed 8)
+        
         const data = cmAccountInfo.data;
         const collectionMint = new solanaWeb3.PublicKey(data.slice(72, 104));
-        const itemsMinted    = Number(data.readBigUInt64LE(104));
+        const rawMinted = Number(data.readBigUInt64LE(80));
+        const itemsMinted = rawMinted < TOTAL_SUPPLY ? rawMinted : 0;
 
         // Generate fresh mint keypair
         const mintKeypair = solanaWeb3.Keypair.generate();
@@ -2112,9 +2113,8 @@
         const cmPubkey   = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
         const info = await connection.getAccountInfo(cmPubkey, { encoding: 'base64' });
         if (!info) { updateProgress(0); return; }
-        // items_redeemed is a u64 at byte offset 104 in the CM v3 account layout
-        const itemsMinted = Number(info.data.readBigUInt64LE(104));
-        updateProgress(itemsMinted);
+        const raw = Number(info.data.readBigUInt64LE(80));
+        updateProgress(raw < TOTAL_SUPPLY ? raw : 0);
       } catch(e) {
         console.warn('Could not fetch mint progress:', e.message);
         updateProgress(mintedCount);
