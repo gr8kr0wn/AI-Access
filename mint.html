@@ -1035,23 +1035,28 @@
             </div>
           </div>
 
+          <!-- Rarity info -->
+          <div style="text-align:center; margin-bottom:12px; font-size:0.85rem; color:rgba(255,255,255,0.5);">
+            🎲 <strong style="color:rgba(255,255,255,0.75);">Mint order determines your rarity.</strong> Early minters get Common, later mints unlock Rare, Epic &amp; Legendary.
+          </div>
+
           <!-- Rarity tiers -->
           <div class="rarity-tiers">
-            <div class="rarity-tier-card active" id="tierCommon" onclick="previewRarity('common')">
+            <div class="rarity-tier-card active" id="tierCommon" title="Mint order determines your rarity">
               <div id="tierCommonImgWrap"></div>
-              <div class="rarity-tier-label" style="color:#ccc;">Common · 1x</div>
+              <div class="rarity-tier-label" style="color:#ccc;">Common · 1x · 300 available</div>
             </div>
-            <div class="rarity-tier-card" id="tierRare" onclick="previewRarity('rare')">
+            <div class="rarity-tier-card" id="tierRare" title="Mint order determines your rarity">
               <div id="tierRareImgWrap"></div>
-              <div class="rarity-tier-label" style="color:var(--cyan);">Rare · 2x</div>
+              <div class="rarity-tier-label" style="color:var(--cyan);">Rare · 2x · 125 available</div>
             </div>
-            <div class="rarity-tier-card" id="tierEpic" onclick="previewRarity('epic')">
+            <div class="rarity-tier-card" id="tierEpic" title="Mint order determines your rarity">
               <div id="tierEpicImgWrap"></div>
-              <div class="rarity-tier-label" style="color:var(--pink);">Epic · 5x</div>
+              <div class="rarity-tier-label" style="color:var(--pink);">Epic · 5x · 50 available</div>
             </div>
-            <div class="rarity-tier-card" id="tierLegendary" onclick="previewRarity('legendary')">
+            <div class="rarity-tier-card" id="tierLegendary" title="Mint order determines your rarity">
               <div id="tierLegendaryImgWrap"></div>
-              <div class="rarity-tier-label" style="color:#FFD700;">Legendary · 10x · 25</div>
+              <div class="rarity-tier-label" style="color:#FFD700;">Legendary · 10x · 25 available</div>
             </div>
           </div>
         </div>
