@@ -1881,7 +1881,7 @@
         
         const data = cmAccountInfo.data;
         const collectionMint = new solanaWeb3.PublicKey(data.slice(72, 104));
-        const rawMinted = Number(data.readBigUInt64LE(80));
+        const rawMinted = Number(new DataView(data.buffer, data.byteOffset).getBigUint64(80, true));
         const itemsMinted = rawMinted < TOTAL_SUPPLY ? rawMinted : 0;
 
         // Generate fresh mint keypair
@@ -1889,17 +1889,21 @@
         const mintKey     = mintKeypair.publicKey;
 
         // Derive PDAs
-        const [metadataPDA]       = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes()], TOKEN_METADATA_PROGRAM);
-        const [masterEditionPDA]  = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes(), Buffer.from('edition')], TOKEN_METADATA_PROGRAM);
-        const [cmAuthorityPDA]    = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('candy_machine'), cmPubkey.toBytes()], CANDY_MACHINE_PROGRAM);
-        const [collectionMetaPDA] = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes()], TOKEN_METADATA_PROGRAM);
-        const [collectionEdPDA]   = solanaWeb3.PublicKey.findProgramAddressSync([Buffer.from('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes(), Buffer.from('edition')], TOKEN_METADATA_PROGRAM);
+        // Browser-native encoder replacing Node's Buffer.from()
+        const enc = new TextEncoder();
+        const strToBytes = (s) => enc.encode(s);
+
+        const [metadataPDA]       = solanaWeb3.PublicKey.findProgramAddressSync([strToBytes('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes()], TOKEN_METADATA_PROGRAM);
+        const [masterEditionPDA]  = solanaWeb3.PublicKey.findProgramAddressSync([strToBytes('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), mintKey.toBytes(), strToBytes('edition')], TOKEN_METADATA_PROGRAM);
+        const [cmAuthorityPDA]    = solanaWeb3.PublicKey.findProgramAddressSync([strToBytes('candy_machine'), cmPubkey.toBytes()], CANDY_MACHINE_PROGRAM);
+        const [collectionMetaPDA] = solanaWeb3.PublicKey.findProgramAddressSync([strToBytes('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes()], TOKEN_METADATA_PROGRAM);
+        const [collectionEdPDA]   = solanaWeb3.PublicKey.findProgramAddressSync([strToBytes('metadata'), TOKEN_METADATA_PROGRAM.toBytes(), collectionMint.toBytes(), strToBytes('edition')], TOKEN_METADATA_PROGRAM);
 
         // Buyer's associated token account for the new mint
         const [buyerATA] = solanaWeb3.PublicKey.findProgramAddressSync([payerKey.toBytes(), SPL_TOKEN_PROGRAM.toBytes(), mintKey.toBytes()], SPL_ASSOC_TOKEN);
 
         // Build mint instruction (discriminator = sha256("global:mint_v2")[0:8])
-        const mintDiscriminator = Buffer.from([120, 121, 23, 146, 173, 110, 199, 205]);
+        const mintDiscriminator = new Uint8Array([120, 121, 23, 146, 173, 110, 199, 205]);
         const mintIx = new solanaWeb3.TransactionInstruction({
           programId: CANDY_MACHINE_PROGRAM,
           keys: [
@@ -2113,7 +2117,7 @@
         const cmPubkey   = new solanaWeb3.PublicKey(CANDY_MACHINE_ID);
         const info = await connection.getAccountInfo(cmPubkey, { encoding: 'base64' });
         if (!info) { updateProgress(0); return; }
-        const raw = Number(info.data.readBigUInt64LE(80));
+        const raw = Number(new DataView(info.data.buffer, info.data.byteOffset).getBigUint64(80, true));
         updateProgress(raw < TOTAL_SUPPLY ? raw : 0);
       } catch(e) {
         console.warn('Could not fetch mint progress:', e.message);
