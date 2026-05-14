@@ -8,29 +8,24 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <!-- Solana Web3.js -->
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
-  <!-- Metaplex JS SDK (UMD build) -->
-  <script src="https://cdn.jsdelivr.net/npm/@metaplex-foundation/js@0.20.1/dist/index.iife.min.js"></script>
+  <!-- Metaplex JS SDK via esm.sh (browser-compatible, polyfills Node built-ins) -->
+  <script type="module">
+    import * as MetaplexMod from 'https://esm.sh/@metaplex-foundation/js@0.20.1?bundle&target=es2020';
+    window.MetaplexFoundation = MetaplexMod;
+    window._metaplexReady = true;
+    window.dispatchEvent(new Event('metaplex-ready'));
+  </script>
   <script>
-    // Detect whichever global name the IIFE registered and alias to MetaplexFoundation
-    (function() {
-      var candidates = ['MetaplexFoundation', 'MetaplexJs', 'metaplexFoundation', 'metaplex'];
-      for (var i = 0; i < candidates.length; i++) {
-        if (window[candidates[i]] && window[candidates[i]].Metaplex) {
-          window.MetaplexFoundation = window[candidates[i]];
-          return;
-        }
-      }
-      // Fallback: scan all window keys for an object with a .Metaplex property
-      for (var key in window) {
-        try {
-          if (window[key] && typeof window[key] === 'object' && window[key].Metaplex) {
-            window.MetaplexFoundation = window[key];
-            return;
-          }
-        } catch(e) {}
-      }
-      console.error('MetaplexFoundation could not be detected — SDK may have failed to load.');
-    })();
+    // Ensure MetaplexFoundation is available before mint is called
+    window._metaplexReady = false;
+    window.waitForMetaplex = function() {
+      return new Promise(function(resolve) {
+        if (window._metaplexReady) return resolve();
+        window.addEventListener('metaplex-ready', resolve, { once: true });
+        // Timeout after 15s
+        setTimeout(resolve, 15000);
+      });
+    };
   </script>
 
   <style>
@@ -1879,6 +1874,12 @@
       btn.innerHTML = '<span class="spinner"></span> Minting on Solana...';
 
       try {
+        // Wait for Metaplex SDK to finish loading (esm.sh async import)
+        await window.waitForMetaplex();
+        if (!window.MetaplexFoundation || !window.MetaplexFoundation.Metaplex) {
+          throw new Error('Metaplex SDK failed to load. Please refresh and try again.');
+        }
+
         // ── REAL METAPLEX CANDY MACHINE MINT ──
         const connection = new solanaWeb3.Connection(
           'https://api.mainnet-beta.solana.com', 'confirmed'
@@ -2102,7 +2103,7 @@
     ============================================================ */
     async function fetchMintProgress() {
       try {
-        if (typeof solanaWeb3 === 'undefined' || typeof MetaplexFoundation === 'undefined') {
+        if (typeof solanaWeb3 === 'undefined' || !window.MetaplexFoundation || !window.MetaplexFoundation.Metaplex) {
           updateProgress(0); return;
         }
         const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
