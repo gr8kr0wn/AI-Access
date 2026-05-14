@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.1/lib/index.iife.min.js"></script>
   <!-- Metaplex JS SDK (UMD build) -->
   <script src="https://cdn.jsdelivr.net/npm/@metaplex-foundation/js@0.20.1/dist/index.iife.min.js"></script>
+  <script>var MetaplexFoundation = MetaplexJs;</script>
 
   <style>
     /* ── Page Hero ── */
@@ -942,21 +943,6 @@
   </style>
 </head>
 <body>
-  <!-- PROTOCOL WARNING: Phantom only injects on https:// or localhost -->
-  <script>
-    (function() {
-      const proto = window.location.protocol;
-      const host  = window.location.hostname;
-      const isOk  = proto === 'https:' || host === 'localhost' || host === '127.0.0.1';
-      if (!isOk) {
-        const bar = document.createElement('div');
-        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ff2f2f;color:#fff;text-align:center;padding:0.7rem 1rem;font-family:monospace;font-size:0.85rem;font-weight:700;';
-        bar.innerHTML = '⚠️ Wallet extensions (Phantom, Solflare) only work on <strong>https://</strong> or <strong>localhost</strong>. This page is on <strong>' + proto + '</strong> — wallets will not connect.';
-        document.body.prepend(bar);
-      }
-    })();
-  </script>
-
   <canvas id="bg-canvas"></canvas>
   <div class="noise-overlay"></div>
   <div class="cursor-dot"></div>
@@ -1288,7 +1274,7 @@
     /* ============================================================
        MINT PAGE — CONFIGURATION
     ============================================================ */
-    const CANDY_MACHINE_ID = 'HwdypmTVwuwEfULnasrLcb7SuGvJekmcWRq1RWb5gDeC';
+    const CANDY_MACHINE_ID = 'HwdypmTVwuwEfULnasrLcb7SuGvJekmcWRq1RWb5gDe';
     const TOTAL_SUPPLY     = 500;
     const WL_START         = new Date('2026-05-14T00:00:00Z');
     const PUBLIC_START     = new Date('2026-05-15T00:00:00Z');
@@ -1372,7 +1358,7 @@
       "55W73hV5x7spwehdxMUesavMCWvNivYRjmvcgN5jBPBJ","AkZeX3hKyu9FiWk9i5amzAMs4Xnh7BqzpMhZ6jr9TyZg",
       "BFUfbFzum4pzayS6XmdXbxJrRQ1MLRM8xHX4x3aq7mEn","78yQT1tZW1WyNfTGM8Adb46Nvw6dr7EjGDZ3KEAURvtM",
       "FKmc9AC9qTtQRQVuaUEURLX7XVjWKSw6DoY3HhxUVDEg","EJdgmUGXeusbBZ81CUWtVDuJduwwRe9HxcXegJhNHJmy",
-      "J5Q85Mui21nPsYj1ECMZr2h5GqupS5Z8hdkawopHMw6m","tzjUQxKpnjsJ7J2sdNPmZa4UBNgcPNC6h4Nb4hJAMW2"
+      "J5Q85Mui21nPsYj1ECMZr2h5GqupS5Z8hdkawopHMw6m"
     ];
 
     /* ============================================================
@@ -1659,28 +1645,18 @@
     /* ============================================================
        PROVIDER HELPERS
     ============================================================ */
-    /* Official Phantom detection per docs.phantom.com
-       Extensions inject AFTER DOMContentLoaded on Windows/slower machines,
-       so we poll up to 3 seconds before giving up. */
-    async function getPhantomProvider() {
-      if ('phantom' in window && window.phantom?.solana?.isPhantom)
-        return window.phantom.solana;
-      if (window.solana?.isPhantom)
-        return window.solana;
-      for (let i = 0; i < 30; i++) {
-        await new Promise(r => setTimeout(r, 100));
-        if ('phantom' in window && window.phantom?.solana?.isPhantom)
-          return window.phantom.solana;
-        if (window.solana?.isPhantom)
-          return window.solana;
-      }
+    // Fix #1: Phantom now injects at window.phantom.solana (modern), falling back to window.solana
+    function getPhantomProvider() {
+      if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+      if (window.solana?.isPhantom)           return window.solana;
       return null;
     }
 
+    // Fix #3: Solflare can load slightly after DOMContentLoaded — retry up to 10 × 200ms
     async function getSolflareProvider() {
       if (window.solflare?.isSolflare) return window.solflare;
-      for (let i = 0; i < 30; i++) {
-        await new Promise(r => setTimeout(r, 100));
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 200));
         if (window.solflare?.isSolflare) return window.solflare;
       }
       return null;
@@ -1716,38 +1692,38 @@
     async function connectWallet(provider) {
       document.getElementById('walletOptions').classList.remove('show');
 
-      // Show detecting spinner immediately — polling can take up to 3s on Windows
-      const connectBtn = document.getElementById('connectBtn');
-      connectBtn.innerHTML = '<span class="spinner"></span> Detecting wallet...';
-      connectBtn.disabled  = true;
-
       let p = null;
 
       if (provider === 'phantom') {
-        p = await getPhantomProvider();
+        p = getPhantomProvider();
       } else if (provider === 'solflare') {
+        const connectBtn = document.getElementById('connectBtn');
+        connectBtn.innerHTML = '<span class="spinner"></span> Detecting...';
+        connectBtn.disabled  = true;
         p = await getSolflareProvider();
+        if (!p) { resetConnectBtn(); }
       } else if (provider === 'backpack') {
         p = getBackpackProvider();
       }
 
       // ── Mobile: no extension detected → deep link ──
       if (!p && isMobile()) {
-        resetConnectBtn();
         redirectToMobileWallet(provider);
         return;
       }
 
-      // ── Desktop: extension not found after full polling window ──
+      // ── Desktop: extension not installed ──
       if (!p) {
         const label = provider.charAt(0).toUpperCase() + provider.slice(1);
-        showToast(`${label} not detected. Make sure it is installed and enabled, then try again.`, 'error');
+        showToast(`${label} not detected. Please install the browser extension.`, 'error');
         resetConnectBtn();
         return;
       }
 
       try {
+        const connectBtn = document.getElementById('connectBtn');
         connectBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+        connectBtn.disabled  = true;
 
         let pubKey;
         if (provider === 'phantom' || provider === 'backpack') {
@@ -1761,7 +1737,9 @@
         window._connectedProvider = p;
         connectedWallet = pubKey;
 
+        // Fix #8: Attach account-change and disconnect listeners
         attachWalletListeners(p);
+
         onWalletConnected(connectedWallet);
       } catch(e) {
         showToast('Connection rejected.', 'error');
