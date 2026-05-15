@@ -1907,6 +1907,35 @@
         // Buyer's associated token account for the new mint
         const [buyerATA] = solanaWeb3.PublicKey.findProgramAddressSync([payerKey.toBytes(), SPL_TOKEN_PROGRAM.toBytes(), mintKey.toBytes()], SPL_ASSOC_TOKEN);
 
+        // ── FIX: Get rent needed to create a mint account (82 bytes) ──
+        // Without this, Solana throws "Attempt to debit an account but found no record of a prior credit"
+        const mintRent = await connection.getMinimumBalanceForRentExemption(82);
+
+        // Instruction 1: Create the mint account on-chain and fund it with rent
+        const createMintAccountIx = solanaWeb3.SystemProgram.createAccount({
+          fromPubkey:           payerKey,
+          newAccountPubkey:     mintKey,
+          space:                82,
+          lamports:             mintRent,
+          programId:            SPL_TOKEN_PROGRAM,
+        });
+
+        // Instruction 2: Initialize the mint (0 decimals, payer is authority)
+        const initMintData = new Uint8Array(67);
+        initMintData[0] = 0; // InitializeMint instruction index
+        initMintData[1] = 0; // decimals = 0 (NFT)
+        initMintData.set(payerKey.toBytes(), 2);   // mint authority = payer
+        initMintData[34] = 1;                       // freeze authority present = true
+        initMintData.set(payerKey.toBytes(), 35);  // freeze authority = payer
+        const initMintIx = new solanaWeb3.TransactionInstruction({
+          programId: SPL_TOKEN_PROGRAM,
+          keys: [
+            { pubkey: mintKey,                           isSigner: false, isWritable: true  },
+            { pubkey: solanaWeb3.SYSVAR_RENT_PUBKEY,     isSigner: false, isWritable: false },
+          ],
+          data: initMintData,
+        });
+
         // Build mint instruction (discriminator = sha256("global:mint_v2")[0:8])
         const mintDiscriminator = new Uint8Array([120, 121, 23, 146, 173, 110, 199, 205]);
         const mintIx = new solanaWeb3.TransactionInstruction({
@@ -1934,7 +1963,8 @@
 
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
         const tx = new solanaWeb3.Transaction({ feePayer: payerKey, recentBlockhash: blockhash });
-        tx.add(mintIx);
+        // Add all 3 instructions in order: create account → initialize mint → candy machine mint
+        tx.add(createMintAccountIx, initMintIx, mintIx);
         tx.partialSign(mintKeypair);
 
         // Ask wallet to sign
